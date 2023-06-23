@@ -261,7 +261,7 @@ var createRouteInfo = function createRouteInfo(routecls, resultcls) {
   });
   if (resultcls) {
     Object.getOwnPropertyNames(resultcls.prototype).forEach(function (p) {
-      var result = routecls.prototype[p];
+      var result = resultcls.prototype[p];
       if (result.$result) return results.push(result);
     });
   }

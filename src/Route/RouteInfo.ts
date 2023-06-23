@@ -34,7 +34,7 @@ export const createRouteInfo = (routecls: Function, resultcls?: Function): Route
 
   if (resultcls) {
     Object.getOwnPropertyNames(resultcls.prototype).forEach(p => {
-      const result = routecls.prototype[p] as RouteResultInfo
+      const result = resultcls.prototype[p] as RouteResultInfo
       if (result.$result) return results.push(result)
     })
   }
