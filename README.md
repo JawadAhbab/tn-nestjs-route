@@ -12,9 +12,13 @@ class HelloRoute {
   @RouteFile() file: Express.Multer.File
 }
 
+class HelloResult {
+  @RouteResult() res: string
+}
+
 @Controller()
 export class HelloController {
-  @RouteGet(HelloRoute)
+  @RouteGet(HelloRoute, HelloResult)
   hello(@RouteFields() fields: HelloRoute) {
     return { success: true }
   }
