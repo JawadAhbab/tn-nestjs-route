@@ -94,6 +94,30 @@ var RouteParam = function RouteParam(opts, v) {
     });
   };
 };
+var rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'any[]']; // prettier-ignore
+var RouteResult = function RouteResult(opts) {
+  return function (target, name) {
+    var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
+    var typename = '';
+    var explicit = opts === null || opts === void 0 ? void 0 : opts.type;
+    if (explicit) {
+      if (tnValidate.isArray(explicit)) typename = "".concat(explicit[0].name, "[]");else typename = explicit.name === 'Array' ? 'any[]' : explicit.name;
+    } else typename = Reflect.getMetadata('design:type', target, name).name;
+    var type = typename.toLowerCase();
+    if (!rtypes.includes(type)) throw new Error("@RouteResult(".concat(name, ") must be typeof ").concat(rtypes, "\n"));
+    var getter = function getter() {
+      return {
+        $result: true,
+        name: name,
+        type: type,
+        optional: optional
+      };
+    };
+    Object.defineProperty(target, name, {
+      get: getter
+    });
+  };
+};
 var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   var _ctx$switchToHttp$get = ctx.switchToHttp().getRequest(),
     params = _ctx$switchToHttp$get.params,
@@ -301,5 +325,6 @@ exports.RouteFile = RouteFile;
 exports.RouteGet = RouteGet;
 exports.RouteParam = RouteParam;
 exports.RoutePost = RoutePost;
+exports.RouteResult = RouteResult;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;
