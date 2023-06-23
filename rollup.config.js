@@ -38,7 +38,7 @@ const files = getFileList('./src/').map(file => ({
   input: file,
   external,
   output: { file: file.replace(/^src/, 'dist').replace(/\.ts$/g, '.js'), format: 'cjs' },
-  plugins: [tsplug(), babelplug(true, false)],
+  plugins: [tsplug(true), babelplug(true, false)],
 }))
 
 module.exports = [...files]
