@@ -1,0 +1,2 @@
+export declare const RouteGet: (routecls: Function, resultcls?: Function) => <TFunction extends Function, Y>(target: object | TFunction, propertyKey?: string | symbol | undefined, descriptor?: TypedPropertyDescriptor<Y> | undefined) => void;
+export declare const RoutePost: (routecls: Function, resultcls?: Function) => <TFunction extends Function, Y>(target: object | TFunction, propertyKey?: string | symbol | undefined, descriptor?: TypedPropertyDescriptor<Y> | undefined) => void;
