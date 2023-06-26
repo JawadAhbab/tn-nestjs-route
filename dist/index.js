@@ -10,15 +10,25 @@ var Route = function Route(routebase) {
     target.prototype.$routebase = routebase;
   };
 };
-var btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'any[]']; // prettier-ignore
+var btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]']; // prettier-ignore
 var RouteBody = function RouteBody(opts, v) {
   return function (target, name) {
     var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
     var typename = '';
+    var object = [];
     var explicit = opts === null || opts === void 0 ? void 0 : opts.type;
-    if (explicit) {
-      if (tnValidate.isArray(explicit)) typename = "".concat(explicit[0].name, "[]");else typename = explicit.name === 'Array' ? 'any[]' : explicit.name;
-    } else typename = Reflect.getMetadata('design:type', target, name).name;
+    if (!explicit) typename = Reflect.getMetadata('design:type', target, name).name;else {
+      var arr = tnValidate.isArray(explicit);
+      var expname = (arr ? explicit[0].name : explicit.name).toLowerCase();
+      if (expname === 'array') typename = 'any[]';else if (btypes.includes(expname)) typename = arr ? "".concat(expname, "[]") : expname;else {
+        var expcls = arr ? explicit[0] : explicit;
+        typename = arr ? 'object[]' : 'object';
+        Object.getOwnPropertyNames(expcls.prototype).forEach(function (p) {
+          var value = expcls.prototype[p];
+          if (value.$body) object.push(value);
+        });
+      }
+    }
     var type = typename.toLowerCase();
     if (!btypes.includes(type)) throw new Error("@RouteBody(".concat(name, ") must be typeof ").concat(btypes, "\n"));
     var validator = v || function () {
@@ -30,6 +40,7 @@ var RouteBody = function RouteBody(opts, v) {
         name: name,
         type: type,
         optional: optional,
+        object: object,
         validator: validator
       };
     };
@@ -94,15 +105,25 @@ var RouteParam = function RouteParam(opts, v) {
     });
   };
 };
-var rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'any[]']; // prettier-ignore
+var rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]']; // prettier-ignore
 var RouteResult = function RouteResult(opts) {
   return function (target, name) {
     var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
     var typename = '';
+    var object = [];
     var explicit = opts === null || opts === void 0 ? void 0 : opts.type;
-    if (explicit) {
-      if (tnValidate.isArray(explicit)) typename = "".concat(explicit[0].name, "[]");else typename = explicit.name === 'Array' ? 'any[]' : explicit.name;
-    } else typename = Reflect.getMetadata('design:type', target, name).name;
+    if (!explicit) typename = Reflect.getMetadata('design:type', target, name).name;else {
+      var arr = tnValidate.isArray(explicit);
+      var expname = (arr ? explicit[0].name : explicit.name).toLowerCase();
+      if (expname === 'array') typename = 'any[]';else if (rtypes.includes(expname)) typename = arr ? "".concat(expname, "[]") : expname;else {
+        var expcls = arr ? explicit[0] : explicit;
+        typename = arr ? 'object[]' : 'object';
+        Object.getOwnPropertyNames(expcls.prototype).forEach(function (p) {
+          var value = expcls.prototype[p];
+          if (value.$result) object.push(value);
+        });
+      }
+    }
     var type = typename.toLowerCase();
     if (!rtypes.includes(type)) throw new Error("@RouteResult(".concat(name, ") must be typeof ").concat(rtypes, "\n"));
     var getter = function getter() {
@@ -110,7 +131,8 @@ var RouteResult = function RouteResult(opts) {
         $result: true,
         name: name,
         type: type,
-        optional: optional
+        optional: optional,
+        object: object
       };
     };
     Object.defineProperty(target, name, {
@@ -141,21 +163,21 @@ var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   };
 };
 var bodyerr = function bodyerr(name) {
-  return new common.BadRequestException("Invalid body: ".concat(name));
+  var prefix = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+  var prestr = prefix.map(function (p) {
+    return "".concat(p, ".");
+  }).join('');
+  return new common.BadRequestException("Invalid body: ".concat(prestr).concat(name));
 };
 var routeFieldsBodies = function routeFieldsBodies(fields, body, route) {
   var typecorrection = !!route.files.length;
-  route.bodies.forEach(function (_ref) {
-    var name = _ref.name,
-      type = _ref.type,
-      optional = _ref.optional,
-      validator = _ref.validator;
+  route.bodies.forEach(function (bodyinfo) {
+    var name = bodyinfo.name,
+      type = bodyinfo.type;
     var prevalue = body[name];
     var voidvalue = prevalue === undefined || prevalue === null;
-    if (!optional && voidvalue) throw bodyerr(name);
-    if (voidvalue) return;
     var value = prevalue;
-    if (typecorrection) {
+    if (typecorrection && !voidvalue) {
       if (type === 'boolean') {
         if (prevalue === 'true') value = true;else if (prevalue === 'false') value = false;else throw bodyerr(name);
       } else if (type === 'number') {
@@ -163,17 +185,42 @@ var routeFieldsBodies = function routeFieldsBodies(fields, body, route) {
         if (isNaN(value)) throw bodyerr(name);
       }
     }
-    if (type === 'string' && !tnValidate.isString(value)) throw bodyerr(name);
-    if (type === 'number' && !tnValidate.isNumber(value)) throw bodyerr(name);
-    if (type === 'boolean' && !tnValidate.isBoolean(value)) throw bodyerr(name);
-    if (type === 'string[]' && !tnValidate.isStrArr(value)) throw bodyerr(name);
-    if (type === 'number[]' && !tnValidate.isNumArr(value)) throw bodyerr(name);
-    if (type === 'boolean[]' && !tnValidate.isBoolArr(value)) throw bodyerr(name);
-    if (type === 'any[]' && !tnValidate.isArray(value)) throw bodyerr(name);
-    if (type === 'object' && !tnValidate.isObject(value)) throw bodyerr(name);
-    if (!validator(value)) throw bodyerr(name);
-    fields[name] = value;
+    fields[name] = getValue(bodyinfo, value);
   });
+};
+var getValue = function getValue(bodyinfo, value) {
+  var prefix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  var name = bodyinfo.name,
+    optional = bodyinfo.optional,
+    type = bodyinfo.type,
+    object = bodyinfo.object,
+    validator = bodyinfo.validator;
+  var voidvalue = value === undefined || value === null;
+  if (!optional && voidvalue) throw bodyerr(name, prefix);
+  if (voidvalue) return;
+  if (type === 'string' && !tnValidate.isString(value)) throw bodyerr(name, prefix);
+  if (type === 'number' && !tnValidate.isNumber(value)) throw bodyerr(name, prefix);
+  if (type === 'boolean' && !tnValidate.isBoolean(value)) throw bodyerr(name, prefix);
+  if (type === 'string[]' && !tnValidate.isStrArr(value)) throw bodyerr(name, prefix);
+  if (type === 'number[]' && !tnValidate.isNumArr(value)) throw bodyerr(name, prefix);
+  if (type === 'boolean[]' && !tnValidate.isBoolArr(value)) throw bodyerr(name, prefix);
+  if (type === 'any[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
+  if (type === 'object[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
+  if (type === 'object' && !tnValidate.isObject(value)) throw bodyerr(name, prefix);
+  if (!validator(value)) throw bodyerr(name, prefix);
+  if (type !== 'object' && type !== 'object[]') return value;
+  var arr = type === 'object[]';
+  var arrvalue = arr ? value : [value];
+  var retvalue = arrvalue.map(function (values) {
+    var value = {};
+    object.forEach(function (nextbodyinfo) {
+      var nextname = nextbodyinfo.name;
+      var nextvalue = values[nextname];
+      value[nextname] = getValue(nextbodyinfo, nextvalue, [].concat(_toConsumableArray(prefix), [name]));
+    });
+    return value;
+  });
+  return arr ? retvalue : retvalue[0];
 };
 var fileerr = function fileerr(name) {
   return new common.BadRequestException("Invalid file: ".concat(name));
@@ -186,11 +233,11 @@ var validate = function validate(file, validators) {
   return mimetypes.includes(file.mimetype);
 };
 var routeFieldsFiles = function routeFieldsFiles(fields, files, route) {
-  route.files.forEach(function (_ref2) {
-    var name = _ref2.name,
-      optional = _ref2.optional,
-      type = _ref2.type,
-      validators = _ref2.validators;
+  route.files.forEach(function (_ref) {
+    var name = _ref.name,
+      optional = _ref.optional,
+      type = _ref.type,
+      validators = _ref.validators;
     var multers = files[name];
     if (!optional && !multers) throw fileerr(name);
     if (!multers) return;
@@ -213,11 +260,11 @@ var paramerr = function paramerr(name) {
   return new common.BadRequestException("Invalid parameter: ".concat(name));
 };
 var routeFieldsParams = function routeFieldsParams(fields, params, route) {
-  route.params.forEach(function (_ref3) {
-    var name = _ref3.name,
-      type = _ref3.type,
-      optional = _ref3.optional,
-      validator = _ref3.validator;
+  route.params.forEach(function (_ref2) {
+    var name = _ref2.name,
+      type = _ref2.type,
+      optional = _ref2.optional,
+      validator = _ref2.validator;
     var value;
     var strval = params[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -299,9 +346,9 @@ var createDecor = function createDecor(Method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref4) {
-      var type = _ref4.type,
-        name = _ref4.name;
+    routeinfo.bodies.forEach(function (_ref3) {
+      var type = _ref3.type,
+        name = _ref3.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });

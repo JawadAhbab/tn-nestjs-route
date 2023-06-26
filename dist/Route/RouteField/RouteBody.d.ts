@@ -1,4 +1,4 @@
-declare const btypes: readonly ["string", "number", "boolean", "object", "string[]", "number[]", "boolean[]", "any[]"];
+declare const btypes: readonly ["string", "number", "boolean", "object", "string[]", "number[]", "boolean[]", "object[]", "any[]"];
 export type RouteBodyType = (typeof btypes)[number];
 type Validator<V = any> = (value: V) => boolean;
 export interface RouteBodyInfo {
@@ -6,11 +6,12 @@ export interface RouteBodyInfo {
     name: string;
     type: RouteBodyType;
     optional: boolean;
+    object: RouteBodyInfo[];
     validator: Validator;
 }
 interface Options {
     optional?: boolean;
-    type?: StringConstructor | NumberConstructor | BooleanConstructor | ObjectConstructor | ArrayConstructor | [StringConstructor] | [NumberConstructor] | [BooleanConstructor];
+    type?: Function | [Function];
 }
 export declare const RouteBody: <V>(opts?: Options, v?: Validator<V> | undefined) => (target: any, name: string) => void;
 export {};
