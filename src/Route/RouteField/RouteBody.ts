@@ -8,7 +8,7 @@ export interface RouteBodyInfo {
   name: string
   type: RouteBodyType
   optional: boolean
-  object: ObjectOf<RouteBodyInfo>
+  object: RouteBodyInfo[]
   validator: Validator
 }
 interface Options {
@@ -20,7 +20,7 @@ export const RouteBody = <V>(opts?: Options, v?: Validator<V>) => {
   return (target: any, name: string) => {
     const optional = opts?.optional || false
     let typename: string = ''
-    let object: ObjectOf<RouteBodyInfo> = {}
+    let object: RouteBodyInfo[] = []
     const explicit = opts?.type
 
     if (!explicit) typename = Reflect.getMetadata('design:type', target, name).name
@@ -34,7 +34,7 @@ export const RouteBody = <V>(opts?: Options, v?: Validator<V>) => {
         typename = arr ? 'object[]' : 'object'
         Object.getOwnPropertyNames(expcls.prototype).forEach(p => {
           const value = expcls.prototype[p] as RouteBodyInfo
-          if (value.$body) object[p] = value
+          if (value.$body) object.push(value)
         })
       }
     }
