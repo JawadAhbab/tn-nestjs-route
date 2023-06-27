@@ -5,6 +5,7 @@ import { RouteResultInfo } from './RouteField/RouteResult'
 export interface RouteInfo {
   $route: true
   route: string
+  name: string
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
   files: RouteFileInfo[]
@@ -44,5 +45,5 @@ export const createRouteInfo = (routecls: Function, resultcls?: Function): Route
     .replace(/[ \s]+/g, '')
     .replace(/[\\\/]+/g, '/')
 
-  return { $route: true, route, params, bodies, files, results }
+  return { $route: true, name: '', route, params, bodies, files, results }
 }

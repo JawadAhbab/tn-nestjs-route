@@ -51,3 +51,12 @@ export class RoutesController {
 ```
 
 ## Client
+
+### `routes.json`
+
+```json
+{
+  "schema": "http://localhost:0000/routes",
+  "routes": "PATH"
+}
+```

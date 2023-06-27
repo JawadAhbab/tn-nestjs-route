@@ -14,6 +14,7 @@ const createDecor = (Method: Method, routecls: Function, resultcls?: Function) =
   const route = routeinfo.route
   const routeDecor = (target: any) => {
     if (!isArray(target.$routes)) target.$routes = []
+    routeinfo.name = target.name
     target.$routes.push(routeinfo)
   }
 
