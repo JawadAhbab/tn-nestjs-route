@@ -1,6 +1,6 @@
 {
   "name": "tn-nestjs-route",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": " ",
   "keywords": [],
   "main": "dist/index.js",
