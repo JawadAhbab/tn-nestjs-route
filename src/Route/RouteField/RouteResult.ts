@@ -1,12 +1,13 @@
 import { isArray } from 'tn-validate'
 const rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore
 export type RouteResultType = (typeof rtypes)[number]
-export interface RouteResultInfo {
+export type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
+export interface RouteResultJson {
   $result: true
   name: string
   type: RouteResultType
   optional: boolean
-  object: RouteResultInfo[]
+  object: RouteResultJson[]
 }
 interface Options {
   optional?: boolean
@@ -17,7 +18,7 @@ export const RouteResult = (opts?: Options) => {
   return (target: any, name: string) => {
     const optional = opts?.optional || false
     let typename: string = ''
-    let object: RouteResultInfo[] = []
+    let object: RouteResultJson[] = []
     const explicit = opts?.type
 
     if (!explicit) typename = Reflect.getMetadata('design:type', target, name).name
@@ -30,7 +31,7 @@ export const RouteResult = (opts?: Options) => {
         const expcls = arr ? explicit[0] : explicit
         typename = arr ? 'object[]' : 'object'
         Object.getOwnPropertyNames(expcls.prototype).forEach(p => {
-          const value = expcls.prototype[p] as RouteResultInfo
+          const value = expcls.prototype[p] as RouteResultJson
           if (value.$result) object.push(value)
         })
       }
@@ -38,7 +39,7 @@ export const RouteResult = (opts?: Options) => {
 
     const type = typename.toLowerCase() as RouteResultType
     if (!rtypes.includes(type)) throw new Error(`@RouteResult(${name}) must be typeof ${rtypes}\n`)
-    const getter = (): RouteResultInfo => ({ $result: true, name, type, optional, object })
+    const getter = (): RouteResultJson => ({ $result: true, name, type, optional, object })
     Object.defineProperty(target, name, { get: getter })
   }
 }

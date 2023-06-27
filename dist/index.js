@@ -289,7 +289,7 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
   routeFieldsFiles(fields, files, route);
   return fields;
 });
-var createRouteInfo = function createRouteInfo(routecls, resultcls) {
+var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
   var name = routecls.name;
   var params = [];
@@ -319,6 +319,7 @@ var createRouteInfo = function createRouteInfo(routecls, resultcls) {
   return {
     $route: true,
     name: name,
+    method: method,
     route: route,
     params: params,
     bodies: bodies,
@@ -327,18 +328,19 @@ var createRouteInfo = function createRouteInfo(routecls, resultcls) {
   };
 };
 var RouteGet = function RouteGet(routecls, resultcls) {
-  return createDecor(common.Get, routecls, resultcls);
+  return createDecor('GET', routecls, resultcls);
 }; // prettier-ignore
 var RoutePost = function RoutePost(routecls, resultcls) {
-  return createDecor(common.Post, routecls, resultcls);
+  return createDecor('POST', routecls, resultcls);
 }; // prettier-ignore
-var createDecor = function createDecor(Method, routecls, resultcls) {
-  var routeinfo = createRouteInfo(routecls, resultcls);
+var createDecor = function createDecor(method, routecls, resultcls) {
+  var routeinfo = createRouteInfo(method, routecls, resultcls);
   var route = routeinfo.route;
   var routeDecor = function routeDecor(target) {
     if (!tnValidate.isArray(target.$routes)) target.$routes = [];
     target.$routes.push(routeinfo);
   };
+  var Method = method === 'GET' ? common.Get : common.Post;
   var decors = [routeDecor, Method(route)];
   if (routeinfo.files.length) {
     var multer = routeinfo.files.map(function (file) {

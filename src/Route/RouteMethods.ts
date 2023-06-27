@@ -3,13 +3,13 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { MulterField } from '@nestjs/platform-express/multer/interfaces/multer-options.interface'
 import { isArray } from 'tn-validate'
 import { RouteBodyType } from './RouteField/RouteBody'
-import { createRouteInfo } from './RouteInfo'
-type Method = 'GET' | 'POST'
+import { RouteMethod, createRouteInfo } from './RouteInfo'
+type ResultClass = Function | BufferConstructor | StringConstructor
 
-export const RouteGet = (routecls: Function, resultcls?: Function) => createDecor('GET', routecls, resultcls) // prettier-ignore
-export const RoutePost = (routecls: Function, resultcls?: Function) => createDecor('POST', routecls, resultcls) // prettier-ignore
+export const RouteGet = (routecls: Function, resultcls?: ResultClass) => createDecor('GET', routecls, resultcls) // prettier-ignore
+export const RoutePost = (routecls: Function, resultcls?: ResultClass) => createDecor('POST', routecls, resultcls) // prettier-ignore
 
-const createDecor = (method: Method, routecls: Function, resultcls?: Function) => {
+const createDecor = (method: RouteMethod, routecls: Function, resultcls?: ResultClass) => {
   const routeinfo = createRouteInfo(method, routecls, resultcls)
   const route = routeinfo.route
   const routeDecor = (target: any) => {
