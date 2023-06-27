@@ -3,24 +3,38 @@
 ### `HelloController.ts`
 
 ```ts
+class BodySuper {
+  @RouteBody() one: string
+  @RouteBody() two: number
+}
+
 @Route('user')
 class HelloRoute {
   @RouteParam() username: string
   @RouteParam() age: number
-  @RouteParam() sex: string
   @RouteBody() count: number
+  @RouteBody({ type: BodySuper }) super: BodySuper
+  @RouteBody({ type: [BodySuper] }) supermore: BodySuper[]
   @RouteFile() file: Express.Multer.File
+  @RouteFile() files: Express.Multer.File[]
+}
+
+class ResultSuper {
+  @RouteResult() rone: string
+  @RouteResult() rtwo: string
 }
 
 class HelloResult {
-  @RouteResult() res: string
+  @RouteResult() resone: string
+  @RouteResult() restwo: string
+  @RouteResult({ type: ResultSuper }) super: ResultSuper
 }
 
 @Controller()
 export class HelloController {
   @RouteGet(HelloRoute, HelloResult)
-  hello(@RouteFields() fields: HelloRoute) {
-    return { success: true }
+  hello(@RouteFields() fields: HelloRoute): HelloResult {
+    return { ... }
   }
 }
 ```
@@ -30,9 +44,10 @@ export class HelloController {
 ```ts
 @Controller()
 export class RoutesController {
-  @Get('/routes')
-  routes() {
+  @Get('/routes') routes() {
     return routeSchemaCreator(controllers)
   }
 }
 ```
+
+## Client
