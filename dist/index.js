@@ -291,6 +291,7 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
 });
 var createRouteInfo = function createRouteInfo(routecls, resultcls) {
   var base = routecls.prototype.$routebase;
+  var name = routecls.name;
   var params = [];
   var bodies = [];
   var files = [];
@@ -317,6 +318,7 @@ var createRouteInfo = function createRouteInfo(routecls, resultcls) {
   }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
   return {
     $route: true,
+    name: name,
     route: route,
     params: params,
     bodies: bodies,

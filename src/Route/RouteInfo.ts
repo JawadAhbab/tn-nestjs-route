@@ -2,9 +2,11 @@ import { RouteBodyInfo } from './RouteField/RouteBody'
 import { RouteFileInfo } from './RouteField/RouteFile'
 import { RouteParamInfo } from './RouteField/RouteParam'
 import { RouteResultInfo } from './RouteField/RouteResult'
+type Method = 'GET' | 'POST'
 export interface RouteInfo {
   $route: true
   route: string
+  method: Method
   name: string
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
@@ -12,8 +14,13 @@ export interface RouteInfo {
   results: RouteResultInfo[]
 }
 
-export const createRouteInfo = (routecls: Function, resultcls?: Function): RouteInfo => {
+export const createRouteInfo = (
+  method: Method,
+  routecls: Function,
+  resultcls?: Function
+): RouteInfo => {
   const base = routecls.prototype.$routebase
+  const name = routecls.name
   const params: RouteParamInfo[] = []
   const bodies: RouteBodyInfo[] = []
   const files: RouteFileInfo[] = []
@@ -45,5 +52,5 @@ export const createRouteInfo = (routecls: Function, resultcls?: Function): Route
     .replace(/[ \s]+/g, '')
     .replace(/[\\\/]+/g, '/')
 
-  return { $route: true, name: '', route, params, bodies, files, results }
+  return { $route: true, name, method, route, params, bodies, files, results }
 }

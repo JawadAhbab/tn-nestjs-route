@@ -4,20 +4,20 @@ import { MulterField } from '@nestjs/platform-express/multer/interfaces/multer-o
 import { isArray } from 'tn-validate'
 import { RouteBodyType } from './RouteField/RouteBody'
 import { createRouteInfo } from './RouteInfo'
-type Method = (path?: string | string[]) => MethodDecorator
+type Method = 'GET' | 'POST'
 
-export const RouteGet = (routecls: Function, resultcls?: Function) => createDecor(Get, routecls, resultcls) // prettier-ignore
-export const RoutePost = (routecls: Function, resultcls?: Function) => createDecor(Post, routecls, resultcls) // prettier-ignore
+export const RouteGet = (routecls: Function, resultcls?: Function) => createDecor('GET', routecls, resultcls) // prettier-ignore
+export const RoutePost = (routecls: Function, resultcls?: Function) => createDecor('POST', routecls, resultcls) // prettier-ignore
 
-const createDecor = (Method: Method, routecls: Function, resultcls?: Function) => {
-  const routeinfo = createRouteInfo(routecls, resultcls)
+const createDecor = (method: Method, routecls: Function, resultcls?: Function) => {
+  const routeinfo = createRouteInfo(method, routecls, resultcls)
   const route = routeinfo.route
   const routeDecor = (target: any) => {
     if (!isArray(target.$routes)) target.$routes = []
-    routeinfo.name = target.name
     target.$routes.push(routeinfo)
   }
 
+  const Method = method === 'GET' ? Get : Post
   const decors = [routeDecor, Method(route)]
   if (routeinfo.files.length) {
     const multer: MulterField[] = routeinfo.files.map(file => ({ name: file.name }))

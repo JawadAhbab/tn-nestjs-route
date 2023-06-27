@@ -5,6 +5,7 @@ import { RouteResultInfo } from './RouteField/RouteResult';
 export interface RouteInfo {
     $route: true;
     route: string;
+    name: string;
     params: RouteParamInfo[];
     bodies: RouteBodyInfo[];
     files: RouteFileInfo[];
