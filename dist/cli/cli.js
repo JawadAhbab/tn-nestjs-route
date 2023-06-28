@@ -43,9 +43,9 @@ var templateRoute = function templateRoute(routeinfo) {
     vartypes += "".concat(name).concat(optional ? '?' : '', ":").concat(vtype, ";");
   });
   var r = routeinfo.results;
-  var tres = r === 'Buffer' || r === 'String';
-  var restypes = r === 'Buffer' ? 'ArrayBuffer' : r === 'String' ? 'string' : loopableType(r);
-  return "\nconst info".concat(name, ": RouteInfo = ").concat(JSON.stringify(routeinfo), "\nexport interface Route").concat(name, "Variables {").concat(vartypes, "}\nexport ").concat(tres ? 'type' : 'interface', " Route").concat(name, "Result ").concat(tres ? '= ' : '', "{").concat(restypes, "}\nexport const url").concat(name, " = (variables: Route").concat(name, "Variables) => createUrl(info").concat(name, ", variables)\nexport const axios").concat(name, " = (props: AxiosRequestProps<Route").concat(name, "Variables, Route").concat(name, "Result>) => createAxiosRequest(info").concat(name, ", props)\n");
+  var istype = r === 'Buffer' || r === 'String';
+  var res = r === 'Buffer' ? 'ArrayBuffer' : r === 'String' ? 'string' : loopableType(r);
+  return "\nconst info".concat(name, ": RouteInfo = ").concat(JSON.stringify(routeinfo), "\nexport interface Route").concat(name, "Variables {").concat(vartypes, "}\nexport ").concat(istype ? 'type' : 'interface', " Route").concat(name, "Result ").concat(istype ? "= ".concat(res) : "{".concat(res, "}"), "\nexport const url").concat(name, " = (variables: Route").concat(name, "Variables) => createUrl(info").concat(name, ", variables)\nexport const axios").concat(name, " = (props: AxiosRequestProps<Route").concat(name, "Variables, Route").concat(name, "Result>) => createAxiosRequest(info").concat(name, ", props)\n");
 };
 var loopableType = function loopableType(infos) {
   var strtype = '';
