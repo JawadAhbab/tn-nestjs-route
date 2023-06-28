@@ -12,13 +12,13 @@ export const templateRoute = (routeinfo: RouteInfo) => {
   })
 
   const r = routeinfo.results
-  const tres = r === 'Buffer' || r === 'String'
-  const restypes = r === 'Buffer' ? 'ArrayBuffer' : r === 'String' ? 'string' : loopableType(r)
+  const istype = r === 'Buffer' || r === 'String'
+  const res = r === 'Buffer' ? 'ArrayBuffer' : r === 'String' ? 'string' : loopableType(r)
 
   return `
 const info${name}: RouteInfo = ${JSON.stringify(routeinfo)}
 export interface Route${name}Variables {${vartypes}}
-export ${tres ? 'type' : 'interface'} Route${name}Result ${tres ? '= ' : ''}{${restypes}}
+export ${istype ? 'type' : 'interface'} Route${name}Result ${istype ? `= ${res}` : `{${res}}`}
 export const url${name} = (variables: Route${name}Variables) => createUrl(info${name}, variables)
 export const axios${name} = (props: AxiosRequestProps<Route${name}Variables, Route${name}Result>) => createAxiosRequest(info${name}, props)
 `
