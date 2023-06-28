@@ -44,7 +44,7 @@ module.exports = [
   {
     input: './src/cli/cli.ts',
     external,
-    output: { file: './dist/cli/cli.js', format: 'cjs' },
+    output: { file: './dist/cli/cli.js', format: 'cjs', banner: '#!/usr/bin/env node' },
     plugins: [tsplug(), babelplug(true, false)],
   },
 ]
