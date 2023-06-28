@@ -56,7 +56,12 @@ export class RoutesController {
 
 ```json
 {
+  "site": "http://localhost:0000/",
   "schema": "http://localhost:0000/routes",
-  "routes": "PATH"
+  "outpath": "..."
 }
 ```
+
+### Generate Routes
+
+`routegen`

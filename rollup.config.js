@@ -41,4 +41,10 @@ module.exports = [
     output: { file: './dist/index.js', format: 'cjs' },
     plugins: [tsplug(true), babelplug(true, false)],
   },
+  {
+    input: './src/cli/cli.ts',
+    external,
+    output: { file: './dist/cli/cli.js', format: 'cjs' },
+    plugins: [tsplug(), babelplug(true, false)],
+  },
 ]

@@ -1,17 +1,18 @@
 import { RouteBodyInfo } from './RouteField/RouteBody';
 import { RouteFileInfo } from './RouteField/RouteFile';
 import { RouteParamInfo } from './RouteField/RouteParam';
+import { RouteQueryInfo } from './RouteField/RouteQuery';
 import { RouteResultInfo } from './RouteField/RouteResult';
-type Method = 'GET' | 'POST';
+export type RouteMethod = 'GET' | 'POST';
 export interface RouteInfo {
     $route: true;
     route: string;
-    method: Method;
+    method: RouteMethod;
     name: string;
+    queries: RouteQueryInfo[];
     params: RouteParamInfo[];
     bodies: RouteBodyInfo[];
     files: RouteFileInfo[];
-    results: RouteResultInfo[];
+    results: RouteResultInfo;
 }
-export declare const createRouteInfo: (method: Method, routecls: Function, resultcls?: Function) => RouteInfo;
-export {};
+export declare const createRouteInfo: (method: RouteMethod, routecls: Function, resultcls?: Function) => RouteInfo;

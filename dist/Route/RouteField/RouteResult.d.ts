@@ -1,11 +1,12 @@
 declare const rtypes: readonly ["string", "number", "boolean", "object", "string[]", "number[]", "boolean[]", "object[]", "any[]"];
 export type RouteResultType = (typeof rtypes)[number];
-export interface RouteResultInfo {
+export type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer';
+export interface RouteResultJson {
     $result: true;
     name: string;
     type: RouteResultType;
     optional: boolean;
-    object: RouteResultInfo[];
+    object: RouteResultJson[];
 }
 interface Options {
     optional?: boolean;

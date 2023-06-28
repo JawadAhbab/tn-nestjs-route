@@ -1,4 +1,3 @@
-import { ObjectOf } from 'tn-typescript'
 import { isArray } from 'tn-validate'
 const btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore
 export type RouteBodyType = (typeof btypes)[number]

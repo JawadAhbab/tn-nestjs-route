@@ -105,6 +105,31 @@ var RouteParam = function RouteParam(opts, v) {
     });
   };
 };
+var qtypes = ['string', 'number', 'boolean'];
+var RouteQuery = function RouteQuery(opts, v) {
+  return function (target, name) {
+    var _opts$type2;
+    var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
+    var typename = (opts === null || opts === void 0 ? void 0 : (_opts$type2 = opts.type) === null || _opts$type2 === void 0 ? void 0 : _opts$type2.name) || Reflect.getMetadata('design:type', target, name).name;
+    var type = typename.toLowerCase();
+    if (!qtypes.includes(type)) throw new Error("@RouteQuery(".concat(name, ") must be typeof ").concat(qtypes, "\n"));
+    var validator = v || function () {
+      return true;
+    };
+    var getter = function getter() {
+      return {
+        $query: true,
+        name: name,
+        type: type,
+        optional: optional,
+        validator: validator
+      };
+    };
+    Object.defineProperty(target, name, {
+      get: getter
+    });
+  };
+};
 var rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]']; // prettier-ignore
 var RouteResult = function RouteResult(opts) {
   return function (target, name) {
@@ -144,7 +169,8 @@ var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   var _ctx$switchToHttp$get = ctx.switchToHttp().getRequest(),
     params = _ctx$switchToHttp$get.params,
     body = _ctx$switchToHttp$get.body,
-    files = _ctx$switchToHttp$get.files;
+    files = _ctx$switchToHttp$get.files,
+    query = _ctx$switchToHttp$get.query;
   var reflector = new core.Reflector();
   var handler = ctx.getHandler();
   var path = reflector.get('path', handler);
@@ -158,6 +184,7 @@ var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   return {
     params: params,
     body: body,
+    query: query,
     files: files,
     route: route
   };
@@ -277,14 +304,37 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
     fields[name] = value;
   });
 };
+var queryerr = function queryerr(name) {
+  return new common.BadRequestException("Invalid query: ".concat(name));
+};
+var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
+  route.queries.forEach(function (_ref3) {
+    var name = _ref3.name,
+      type = _ref3.type,
+      optional = _ref3.optional,
+      validator = _ref3.validator;
+    var value;
+    var strval = query[name];
+    if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
+      if (strval === 'true') value = true;else if (strval === 'false') value = false;else throw queryerr(name);
+    } else {
+      value = +strval;
+      if (isNaN(value)) throw queryerr(name);
+    }
+    if (!validator(value)) throw queryerr(name);
+    fields[name] = value;
+  });
+};
 var RouteFields = common.createParamDecorator(function (_, ctx) {
   var _routeFieldsEssential = routeFieldsEssentials(ctx),
     params = _routeFieldsEssential.params,
     body = _routeFieldsEssential.body,
+    query = _routeFieldsEssential.query,
     files = _routeFieldsEssential.files,
     route = _routeFieldsEssential.route;
   var fields = {};
   routeFieldsParams(fields, params, route);
+  routeFieldsQueries(fields, query, route);
   routeFieldsBodies(fields, body, route);
   routeFieldsFiles(fields, files, route);
   return fields;
@@ -293,13 +343,15 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
   var name = routecls.name;
   var params = [];
+  var queries = [];
   var bodies = [];
   var files = [];
-  var results = [];
   var paramnames = [];
   Object.getOwnPropertyNames(routecls.prototype).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
+    var query = body;
+    if (query.$query) return queries.push(query);
     var file = body;
     if (file.$file) return files.push(file);
     var param = body;
@@ -307,11 +359,14 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     params.push(param);
     paramnames.push(p);
   });
-  if (resultcls) {
+  var results = 'String';
+  if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'String') results = 'String';else if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'Buffer') results = 'Buffer';else if (resultcls) {
+    var resjson = [];
     Object.getOwnPropertyNames(resultcls.prototype).forEach(function (p) {
       var result = resultcls.prototype[p];
-      if (result.$result) return results.push(result);
+      if (result.$result) return resjson.push(result);
     });
+    results = resjson;
   }
   var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
@@ -321,6 +376,7 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     name: name,
     method: method,
     route: route,
+    queries: queries,
     params: params,
     bodies: bodies,
     files: files,
@@ -350,9 +406,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref3) {
-      var type = _ref3.type,
-        name = _ref3.name;
+    routeinfo.bodies.forEach(function (_ref4) {
+      var type = _ref4.type,
+        name = _ref4.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
@@ -376,6 +432,7 @@ exports.RouteFile = RouteFile;
 exports.RouteGet = RouteGet;
 exports.RouteParam = RouteParam;
 exports.RoutePost = RoutePost;
+exports.RouteQuery = RouteQuery;
 exports.RouteResult = RouteResult;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;
