@@ -55,11 +55,13 @@ export class RoutesController {
 ### `routes.json`
 
 ```json
-{
-  "site": "http://localhost:0000/",
-  "schema": "http://localhost:0000/routes",
-  "outpath": "..."
-}
+[
+  {
+    "site": "http://localhost:0000/",
+    "schema": "http://localhost:0000/routes",
+    "outpath": "..."
+  }
+]
 ```
 
 ### Generate Routes
