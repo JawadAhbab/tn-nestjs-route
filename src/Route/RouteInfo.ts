@@ -45,12 +45,16 @@ export const createRouteInfo = (
     paramnames.push(p)
   })
 
-  const results: RouteResultJson[] = []
-  if (resultcls) {
+  let results: RouteResultInfo = 'String'
+  if (resultcls?.name === 'String') results = 'String'
+  else if (resultcls?.name === 'Buffer') results = 'Buffer'
+  else if (resultcls) {
+    const resjson: RouteResultJson[] = []
     Object.getOwnPropertyNames(resultcls.prototype).forEach(p => {
       const result = resultcls.prototype[p] as RouteResultJson
-      if (result.$result) return results.push(result)
+      if (result.$result) return resjson.push(result)
     })
+    results = resjson
   }
 
   const route = [base, ...paramnames.map(n => `:${n}`)]
