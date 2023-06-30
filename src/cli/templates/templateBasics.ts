@@ -3,7 +3,9 @@ import axios, { AxiosError, AxiosProgressEvent, AxiosResponse, ResponseType } fr
 import { AnyObject } from 'tn-typescript'
 
 interface AxiosRequestProps<V = AnyObject, R = any> {
+  auth?: (callback: () => void) => void
   variables?: V
+  signal?: AbortSignal
   headers?: AnyObject
   onProgress?: (e: AxiosProgressEvent) => void
   onSuccess?: (data: R, res: AxiosResponse<R>) => void
@@ -19,7 +21,8 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
 }
 
 const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
-  const { variables = {}, headers = {}, onProgress, onSuccess, onError, onFinally } = props
+  const { onProgress, onSuccess, onError, onFinally, signal } = props
+  const { auth, variables = {}, headers = {} } = props
   const url = createUrl(info, variables)
   const multipart = !!info.files.length
   if (multipart) headers['Content-Type'] = false
@@ -43,17 +46,15 @@ const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
     data = simpledata
   }
 
-  axios
-    .request({
-      method: info.method,
-      url,
-      responseType,
-      data,
-      headers,
-      onUploadProgress: onProgress,
-    })
-    .then(res => onSuccess && onSuccess(res.data, res))
-    .catch(err => onError && onError(err))
-    .finally(() => onFinally && onFinally())
+  const sendRequest = () => {
+    axios
+      .request({ method: info.method, url, signal, responseType, data, headers, onUploadProgress: onProgress })
+      .then(res => onSuccess && onSuccess(res.data, res))
+      .catch(err => onError && onError(err))
+      .finally(() => onFinally && onFinally())
+  }
+
+  if (!auth) sendRequest()
+  else auth(() => sendRequest()) 
 }
 `
