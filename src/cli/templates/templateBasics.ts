@@ -2,8 +2,9 @@ export const templateBasics = (site: string) => `
 import axios, { AxiosError, AxiosProgressEvent, AxiosResponse, ResponseType } from 'axios'
 import { AnyObject } from 'tn-typescript'
 
+type RouteAuth = (callback: (accessToken: string) => void) => void
 interface AxiosRequestProps<V = AnyObject, R = any> {
-  auth?: (callback: () => void) => void
+  auth?: RouteAuth
   variables?: V
   signal?: AbortSignal
   headers?: AnyObject
@@ -12,6 +13,7 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onError?: (err: AxiosError) => void
   onFinally?: () => void
 }
+
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const site = '${site.replace(/[\\\/]$/, '')}/'
@@ -46,7 +48,8 @@ const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
     data = simpledata
   }
 
-  const sendRequest = () => {
+  const sendRequest = (accessToken?: string) => {
+    if (accessToken) headers.authorization = \`Bearer \${accessToken}\`
     axios
       .request({ method: info.method, url, signal, responseType, data, headers, onUploadProgress: onProgress })
       .then(res => onSuccess && onSuccess(res.data, res))
@@ -55,6 +58,6 @@ const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
   }
 
   if (!auth) sendRequest()
-  else auth(() => sendRequest()) 
+  else auth((accessToken) => sendRequest(accessToken)) 
 }
 `
