@@ -59,7 +59,9 @@ export class RoutesController {
   {
     "site": "http://localhost:0000/",
     "schema": "http://localhost:0000/routes",
-    "outpath": "..."
+    "outpath": "...",
+    "loggerImport": "./logger",
+    "loggerMethod": "routesLogger"
   }
 ]
 ```

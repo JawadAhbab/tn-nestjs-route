@@ -1,1 +1,1 @@
-export declare const templateBasics: (site: string) => string;
+export declare const templateBasics: (site: string, loggerImport?: string, loggerMethod?: string) => string;

@@ -2,6 +2,8 @@
   {
     "site": "http://localhost:8000/",
     "schema": "http://localhost:8000/routes",
-    "outpath": "./src/test.ts"
+    "outpath": "./src/test.ts",
+    "loggerImport": "./logger",
+    "loggerMethod": "routesLogger"
   }
 ]
