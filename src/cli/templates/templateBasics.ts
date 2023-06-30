@@ -2,7 +2,7 @@ export const templateBasics = (site: string) => `
 import axios, { AxiosError, AxiosProgressEvent, AxiosResponse, ResponseType } from 'axios'
 import { AnyObject } from 'tn-typescript'
 
-type RouteAuth = (callback: (accessToken: string) => void) => void
+export type RouteAuth = (callback: (accessToken: string) => void) => void
 interface AxiosRequestProps<V = AnyObject, R = any> {
   auth?: RouteAuth
   variables?: V
@@ -13,7 +13,6 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onError?: (err: AxiosError) => void
   onFinally?: () => void
 }
-
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const site = '${site.replace(/[\\\/]$/, '')}/'
