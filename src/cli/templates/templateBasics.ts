@@ -20,8 +20,11 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const site = '${site.replace(/[\\\/]$/, '')}/'
   const queries = info.queries.map(({ name }) => name + '=' + String(variables[name])).join('&')
-  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => variables[k] || '-').replace(/^[\\\\\\/]/, '')
-  return site + urlr + (queries ? '?' : '') + queries
+  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
+    const val = variables[k]
+    return val ? encodeURIComponent(val) : '-'
+  })
+  return site + urlr.replace(/^[\\\\\\/]/, '') + (queries ? '?' : '') + queries
 }
 
 const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
