@@ -22,7 +22,8 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const queries = info.queries.map(({ name }) => name + '=' + String(variables[name])).join('&')
   const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
     const val = variables[k]
-    return val ? encodeURIComponent(val) : '-'
+    const isnull = val === null || val === undefined
+    return isnull ? '-' : encodeURIComponent(val)
   })
   return site + urlr.replace(/^[\\\\\\/]/, '') + (queries ? '?' : '') + queries
 }
