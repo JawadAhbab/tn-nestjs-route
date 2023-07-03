@@ -1,14 +1,16 @@
+import { Getter, Validator } from './accessories/RouteFieldTypes';
 declare const ptypes: readonly ["string", "number", "boolean"];
 type ParamType = (typeof ptypes)[number];
-type Validator<V = any> = (value: V) => boolean;
 export interface RouteParamInfo {
     $param: true;
     name: string;
     type: ParamType;
     optional: boolean;
+    getter: Getter;
     validator: Validator;
 }
 interface Options {
+    getter?: Getter;
     type?: StringConstructor | NumberConstructor | BooleanConstructor;
     optional?: boolean;
 }

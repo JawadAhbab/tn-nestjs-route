@@ -1,16 +1,18 @@
 import { isArray } from 'tn-validate'
+import { Getter, Validator } from './accessories/RouteFieldTypes'
 const btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore
 export type RouteBodyType = (typeof btypes)[number]
-type Validator<V = any> = (value: V) => boolean
 export interface RouteBodyInfo {
   $body: true
   name: string
   type: RouteBodyType
   optional: boolean
   object: RouteBodyInfo[]
+  getter: Getter
   validator: Validator
 }
 interface Options {
+  getter?: Getter
   optional?: boolean
   type?: Function | [Function]
 }
@@ -41,7 +43,8 @@ export const RouteBody = <V>(opts?: Options, v?: Validator<V>) => {
     const type = typename.toLowerCase() as RouteBodyType
     if (!btypes.includes(type)) throw new Error(`@RouteBody(${name}) must be typeof ${btypes}\n`)
     const validator = v || (() => true)
-    const getter = (): RouteBodyInfo => ({ $body: true, name, type, optional, object, validator })
-    Object.defineProperty(target, name, { get: getter })
+    const getter = opts?.getter || (v => v)
+    const get = (): RouteBodyInfo => ({ $body: true, name, type, optional, object, getter, validator }) // prettier-ignore
+    Object.defineProperty(target, name, { get })
   }
 }

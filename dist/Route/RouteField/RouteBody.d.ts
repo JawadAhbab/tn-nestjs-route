@@ -1,15 +1,17 @@
+import { Getter, Validator } from './accessories/RouteFieldTypes';
 declare const btypes: readonly ["string", "number", "boolean", "object", "string[]", "number[]", "boolean[]", "object[]", "any[]"];
 export type RouteBodyType = (typeof btypes)[number];
-type Validator<V = any> = (value: V) => boolean;
 export interface RouteBodyInfo {
     $body: true;
     name: string;
     type: RouteBodyType;
     optional: boolean;
     object: RouteBodyInfo[];
+    getter: Getter;
     validator: Validator;
 }
 interface Options {
+    getter?: Getter;
     optional?: boolean;
     type?: Function | [Function];
 }

@@ -34,18 +34,22 @@ var RouteBody = function RouteBody(opts, v) {
     var validator = v || function () {
       return true;
     };
-    var getter = function getter() {
+    var getter = (opts === null || opts === void 0 ? void 0 : opts.getter) || function (v) {
+      return v;
+    };
+    var get = function get() {
       return {
         $body: true,
         name: name,
         type: type,
         optional: optional,
         object: object,
+        getter: getter,
         validator: validator
       };
-    };
+    }; // prettier-ignore
     Object.defineProperty(target, name, {
-      get: getter
+      get: get
     });
   };
 };
@@ -91,17 +95,21 @@ var RouteParam = function RouteParam(opts, v) {
     var validator = v || function () {
       return true;
     };
-    var getter = function getter() {
+    var getter = (opts === null || opts === void 0 ? void 0 : opts.getter) || function (v) {
+      return v;
+    };
+    var get = function get() {
       return {
         $param: true,
         name: name,
         type: type,
         optional: optional,
-        validator: validator
+        validator: validator,
+        getter: getter
       };
     };
     Object.defineProperty(target, name, {
-      get: getter
+      get: get
     });
   };
 };
@@ -116,17 +124,21 @@ var RouteQuery = function RouteQuery(opts, v) {
     var validator = v || function () {
       return true;
     };
-    var getter = function getter() {
+    var getter = (opts === null || opts === void 0 ? void 0 : opts.getter) || function (v) {
+      return v;
+    };
+    var get = function get() {
       return {
         $query: true,
         name: name,
         type: type,
         optional: optional,
-        validator: validator
+        validator: validator,
+        getter: getter
       };
     };
     Object.defineProperty(target, name, {
-      get: getter
+      get: get
     });
   };
 };
@@ -221,7 +233,8 @@ var getValue = function getValue(bodyinfo, value) {
     optional = bodyinfo.optional,
     type = bodyinfo.type,
     object = bodyinfo.object,
-    validator = bodyinfo.validator;
+    validator = bodyinfo.validator,
+    getter = bodyinfo.getter;
   var voidvalue = value === undefined || value === null;
   if (!optional && voidvalue) throw bodyerr(name, prefix);
   if (voidvalue) return;
@@ -235,7 +248,7 @@ var getValue = function getValue(bodyinfo, value) {
   if (type === 'object[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
   if (type === 'object' && !tnValidate.isObject(value)) throw bodyerr(name, prefix);
   if (!validator(value)) throw bodyerr(name, prefix);
-  if (type !== 'object' && type !== 'object[]') return value;
+  if (type !== 'object' && type !== 'object[]') return getter(value);
   var arr = type === 'object[]';
   var arrvalue = arr ? value : [value];
   var retvalue = arrvalue.map(function (values) {
@@ -245,9 +258,9 @@ var getValue = function getValue(bodyinfo, value) {
       var nextvalue = values[nextname];
       value[nextname] = getValue(nextbodyinfo, nextvalue, [].concat(_toConsumableArray(prefix), [name]));
     });
-    return value;
+    return getter(value);
   });
-  return arr ? retvalue : retvalue[0];
+  return getter(arr ? retvalue : retvalue[0]);
 };
 var fileerr = function fileerr(name) {
   return new common.BadRequestException("Invalid file: ".concat(name));
@@ -291,7 +304,8 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
     var name = _ref2.name,
       type = _ref2.type,
       optional = _ref2.optional,
-      validator = _ref2.validator;
+      validator = _ref2.validator,
+      getter = _ref2.getter;
     var value;
     var strval = params[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -301,7 +315,7 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
       if (isNaN(value)) throw paramerr(name);
     }
     if (!validator(value)) throw paramerr(name);
-    fields[name] = value;
+    fields[name] = getter(value);
   });
 };
 var queryerr = function queryerr(name) {
@@ -312,7 +326,8 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
     var name = _ref3.name,
       type = _ref3.type,
       optional = _ref3.optional,
-      validator = _ref3.validator;
+      validator = _ref3.validator,
+      getter = _ref3.getter;
     var value;
     var strval = query[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -322,7 +337,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
       if (isNaN(value)) throw queryerr(name);
     }
     if (!validator(value)) throw queryerr(name);
-    fields[name] = value;
+    fields[name] = getter(value);
   });
 };
 var RouteFields = common.createParamDecorator(function (_, ctx) {
