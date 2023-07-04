@@ -183,11 +183,15 @@ var RouteResult = function RouteResult(opts) {
   };
 };
 var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
-  var _ctx$switchToHttp$get = ctx.switchToHttp().getRequest(),
-    params = _ctx$switchToHttp$get.params,
-    body = _ctx$switchToHttp$get.body,
-    files = _ctx$switchToHttp$get.files,
-    query = _ctx$switchToHttp$get.query;
+  var req = ctx.switchToHttp().getRequest();
+  var _req$params = req.params,
+    params = _req$params === void 0 ? {} : _req$params,
+    _req$body = req.body,
+    body = _req$body === void 0 ? {} : _req$body,
+    _req$files = req.files,
+    files = _req$files === void 0 ? {} : _req$files,
+    _req$query = req.query,
+    query = _req$query === void 0 ? {} : _req$query;
   var reflector = new core.Reflector();
   var handler = ctx.getHandler();
   var path = reflector.get('path', handler);

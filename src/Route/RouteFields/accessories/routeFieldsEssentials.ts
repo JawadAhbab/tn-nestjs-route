@@ -7,7 +7,8 @@ import { ObjectOf } from 'tn-typescript'
 type Files = ObjectOf<Express.Multer.File[]>
 
 export const routeFieldsEssentials = (ctx: ExecutionContext) => {
-  const { params, body, files, query } = ctx.switchToHttp().getRequest() as Request
+  const req = ctx.switchToHttp().getRequest() as Request
+  const { params = {}, body = {}, files = {}, query = {} } = req
   const reflector = new Reflector()
   const handler = ctx.getHandler()
   const path = reflector.get<string>('path', handler)
