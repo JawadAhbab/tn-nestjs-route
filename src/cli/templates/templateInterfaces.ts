@@ -51,6 +51,13 @@ interface RouteFileInfo {
   name: string
   type: FileType
   optional: boolean
+  validators: RouteFileInfoValidators
+}
+
+interface RouteFileInfoValidators {
+  maxsize: number
+  limit: number
+  mimetypes: null | string[]
 }
 
 interface RouteResultJson {
