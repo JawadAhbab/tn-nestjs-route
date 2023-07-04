@@ -8,7 +8,7 @@ export const templateRoute = (routeinfo: RouteInfo) => {
   const pqfs = [...routeinfo.params, ...routeinfo.queries, ...routeinfo.files]
   pqfs.forEach(({ type, name, optional }) => {
     const vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type
-    vartypes += `${name}${optional ? '?' : ''}:${vtype};`
+    vartypes += `${name}${optional ? '?' : ''}:${vtype}${optional ? ' | null' : ''};`
   })
 
   const r = routeinfo.results
@@ -29,10 +29,10 @@ const loopableType = (infos: LoopableInfo) => {
   let strtype = ''
   infos.forEach(({ name, type, optional, object }) => {
     const isobj = type === 'object' || type === 'object[]'
-    if (!isobj) strtype += `${name}${optional ? '?' : ''}:${type};`
+    if (!isobj) strtype += `${name}${optional ? '?' : ''}:${type}${optional ? ' | null' : ''};`
     else {
       const isarr = type === 'object[]'
-      strtype += `${name}${optional ? '?' : ''}:{${loopableType(object)}}${isarr ? '[]' : ''};`
+      strtype += `${name}${optional ? '?' : ''}:{${loopableType(object)}}${isarr ? '[]' : ''}${optional ? ' | null' : ''};` // prettier-ignore
     }
   })
   return strtype

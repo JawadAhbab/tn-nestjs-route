@@ -41,7 +41,7 @@ var templateRoute = function templateRoute(routeinfo) {
       name = _ref.name,
       optional = _ref.optional;
     var vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type;
-    vartypes += "".concat(name).concat(optional ? '?' : '', ":").concat(vtype, ";");
+    vartypes += "".concat(name).concat(optional ? '?' : '', ":").concat(vtype).concat(optional ? ' | null' : '', ";");
   });
   var r = routeinfo.results;
   var istype = r === 'Buffer' || r === 'String';
@@ -56,11 +56,12 @@ var loopableType = function loopableType(infos) {
       optional = _ref2.optional,
       object = _ref2.object;
     var isobj = type === 'object' || type === 'object[]';
-    if (!isobj) strtype += "".concat(name).concat(optional ? '?' : '', ":").concat(type, ";");else {
+    if (!isobj) strtype += "".concat(name).concat(optional ? '?' : '', ":").concat(type).concat(optional ? ' | null' : '', ";");else {
       var isarr = type === 'object[]';
-      strtype += "".concat(name).concat(optional ? '?' : '', ":{").concat(loopableType(object), "}").concat(isarr ? '[]' : '', ";");
+      strtype += "".concat(name).concat(optional ? '?' : '', ":{").concat(loopableType(object), "}").concat(isarr ? '[]' : '').concat(optional ? ' | null' : '', ";"); // prettier-ignore
     }
   });
+
   return strtype;
 };
 var configpath = path__namespace.join(process.cwd(), 'routes.json');
