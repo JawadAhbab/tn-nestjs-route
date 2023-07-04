@@ -32,7 +32,7 @@ export const routeFieldsBodies = (fields: AnyObject, body: AnyObject, route: Rou
 }
 
 const getValue = (bodyinfo: RouteBodyInfo, value: any, prefix: string[] = []) => {
-  const { name, optional, type, object, validator, getter } = bodyinfo
+  const { name, optional, type, object, selects, validator, getter } = bodyinfo
   const voidvalue = value === undefined || value === null
   if (!optional && voidvalue) throw bodyerr(name, prefix)
   if (voidvalue) return
@@ -46,6 +46,7 @@ const getValue = (bodyinfo: RouteBodyInfo, value: any, prefix: string[] = []) =>
   if (type === 'any[]' && !isArray(value)) throw bodyerr(name, prefix)
   if (type === 'object[]' && !isArray(value)) throw bodyerr(name, prefix)
   if (type === 'object' && !isObject(value)) throw bodyerr(name, prefix)
+  if (selects && (selects as any[]).includes(value)) throw bodyerr(name)
   if (!validator(value)) throw bodyerr(name, prefix)
 
   if (type !== 'object' && type !== 'object[]') return getter(value)

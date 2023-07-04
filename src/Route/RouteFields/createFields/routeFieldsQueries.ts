@@ -4,7 +4,7 @@ import { RouteInfo } from '../../RouteInfo'
 const queryerr = (name: string) => new BadRequestException(`Invalid query: ${name}`)
 
 export const routeFieldsQueries = (fields: AnyObject, query: AnyObject, route: RouteInfo) => {
-  route.queries.forEach(({ name, type, optional, validator, getter }) => {
+  route.queries.forEach(({ name, type, optional, selects, validator, getter }) => {
     let value: string | number | boolean | undefined
     const strval = query[name]
     if (optional && strval === '-') return
@@ -17,6 +17,8 @@ export const routeFieldsQueries = (fields: AnyObject, query: AnyObject, route: R
       value = +strval
       if (isNaN(value)) throw queryerr(name)
     }
+
+    if (selects && (selects as any[]).includes(value)) throw queryerr(name)
     if (!validator(value)) throw queryerr(name)
     fields[name] = getter(value)
   })

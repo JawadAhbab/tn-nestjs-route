@@ -1,18 +1,20 @@
-import { Getter, Validator } from './accessories/RouteFieldTypes'
+import { Getter, Selects, Validator } from './accessories/RouteFieldTypes'
 const qtypes = ['string', 'number', 'boolean'] as const
 type QueryType = (typeof qtypes)[number]
 export interface RouteQueryInfo {
   $query: true
   name: string
   type: QueryType
-  getter: Getter
   optional: boolean
+  selects: Selects | null
+  getter: Getter
   validator: Validator
 }
 interface Options {
   getter?: Getter
-  type?: StringConstructor | NumberConstructor | BooleanConstructor
+  selects?: Selects
   optional?: boolean
+  type?: StringConstructor | NumberConstructor | BooleanConstructor
 }
 
 export const RouteQuery = <V>(opts?: Options, v?: Validator<V>) => {
@@ -23,7 +25,16 @@ export const RouteQuery = <V>(opts?: Options, v?: Validator<V>) => {
     if (!qtypes.includes(type)) throw new Error(`@RouteQuery(${name}) must be typeof ${qtypes}\n`)
     const validator = v || (() => true)
     const getter = opts?.getter || (v => v)
-    const get = (): RouteQueryInfo => ({ $query: true, name, type, optional, validator, getter })
+    const get = (): RouteQueryInfo => ({
+      $query: true,
+      name,
+      type,
+      optional,
+      selects: opts?.selects || null,
+      validator,
+      getter,
+    })
+
     Object.defineProperty(target, name, { get })
   }
 }

@@ -1,4 +1,5 @@
 import { isArray } from 'tn-validate'
+import { Selects } from './accessories/RouteFieldTypes'
 const rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore
 export type RouteResultType = (typeof rtypes)[number]
 export type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
@@ -6,10 +7,12 @@ export interface RouteResultJson {
   $result: true
   name: string
   type: RouteResultType
+  selects: Selects | null
   optional: boolean
   object: RouteResultJson[]
 }
 interface Options {
+  selects?: Selects
   optional?: boolean
   type?: Function | [Function]
 }
@@ -39,7 +42,15 @@ export const RouteResult = (opts?: Options) => {
 
     const type = typename.toLowerCase() as RouteResultType
     if (!rtypes.includes(type)) throw new Error(`@RouteResult(${name}) must be typeof ${rtypes}\n`)
-    const getter = (): RouteResultJson => ({ $result: true, name, type, optional, object })
-    Object.defineProperty(target, name, { get: getter })
+    const get = (): RouteResultJson => ({
+      $result: true,
+      name,
+      type,
+      optional,
+      object,
+      selects: opts?.selects || null,
+    })
+
+    Object.defineProperty(target, name, { get })
   }
 }

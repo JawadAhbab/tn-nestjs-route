@@ -4,7 +4,7 @@ import { RouteInfo } from '../../RouteInfo'
 const paramerr = (name: string) => new BadRequestException(`Invalid parameter: ${name}`)
 
 export const routeFieldsParams = (fields: AnyObject, params: AnyObject, route: RouteInfo) => {
-  route.params.forEach(({ name, type, optional, validator, getter }) => {
+  route.params.forEach(({ name, type, optional, selects, validator, getter }) => {
     let value: string | number | boolean | undefined
     const strval = params[name]
     if (optional && strval === '-') return
@@ -17,6 +17,8 @@ export const routeFieldsParams = (fields: AnyObject, params: AnyObject, route: R
       value = +strval
       if (isNaN(value)) throw paramerr(name)
     }
+
+    if (selects && (selects as any[]).includes(value)) throw paramerr(name)
     if (!validator(value)) throw paramerr(name)
     fields[name] = getter(value)
   })

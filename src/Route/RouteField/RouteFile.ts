@@ -7,6 +7,7 @@ export interface RouteFileInfo {
   $file: true
   name: string
   type: FileType
+  selects: null
   optional: boolean
   validators: RouteFileInfoValidators
 }
@@ -43,7 +44,15 @@ export const RouteFile = (opts?: Options) => {
     const mimetypes = !mimetype ? null : isArray(mimetype) ? mimetype : [mimetype]
 
     const validators: RouteFileInfoValidators = { maxsize, limit, mimetypes }
-    const getter = (): RouteFileInfo => ({ $file: true, name, type, optional, validators })
+    const getter = (): RouteFileInfo => ({
+      $file: true,
+      name,
+      type,
+      optional,
+      validators,
+      selects: null,
+    })
+
     Object.defineProperty(target, name, { get: getter })
   }
 }

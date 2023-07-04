@@ -44,10 +44,11 @@ var RouteBody = function RouteBody(opts, v) {
         type: type,
         optional: optional,
         object: object,
+        selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
         getter: getter,
         validator: validator
       };
-    }; // prettier-ignore
+    };
     Object.defineProperty(target, name, {
       get: get
     });
@@ -76,7 +77,8 @@ var RouteFile = function RouteFile(opts) {
         name: name,
         type: type,
         optional: optional,
-        validators: validators
+        validators: validators,
+        selects: null
       };
     };
     Object.defineProperty(target, name, {
@@ -104,6 +106,7 @@ var RouteParam = function RouteParam(opts, v) {
         name: name,
         type: type,
         optional: optional,
+        selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
         validator: validator,
         getter: getter
       };
@@ -133,6 +136,7 @@ var RouteQuery = function RouteQuery(opts, v) {
         name: name,
         type: type,
         optional: optional,
+        selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
         validator: validator,
         getter: getter
       };
@@ -163,17 +167,18 @@ var RouteResult = function RouteResult(opts) {
     }
     var type = typename.toLowerCase();
     if (!rtypes.includes(type)) throw new Error("@RouteResult(".concat(name, ") must be typeof ").concat(rtypes, "\n"));
-    var getter = function getter() {
+    var get = function get() {
       return {
         $result: true,
         name: name,
         type: type,
         optional: optional,
-        object: object
+        object: object,
+        selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null
       };
     };
     Object.defineProperty(target, name, {
-      get: getter
+      get: get
     });
   };
 };
@@ -233,6 +238,7 @@ var getValue = function getValue(bodyinfo, value) {
     optional = bodyinfo.optional,
     type = bodyinfo.type,
     object = bodyinfo.object,
+    selects = bodyinfo.selects,
     validator = bodyinfo.validator,
     getter = bodyinfo.getter;
   var voidvalue = value === undefined || value === null;
@@ -247,6 +253,7 @@ var getValue = function getValue(bodyinfo, value) {
   if (type === 'any[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
   if (type === 'object[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
   if (type === 'object' && !tnValidate.isObject(value)) throw bodyerr(name, prefix);
+  if (selects && selects.includes(value)) throw bodyerr(name);
   if (!validator(value)) throw bodyerr(name, prefix);
   if (type !== 'object' && type !== 'object[]') return getter(value);
   var arr = type === 'object[]';
@@ -304,6 +311,7 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
     var name = _ref2.name,
       type = _ref2.type,
       optional = _ref2.optional,
+      selects = _ref2.selects,
       validator = _ref2.validator,
       getter = _ref2.getter;
     var value;
@@ -314,6 +322,7 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
       value = +strval;
       if (isNaN(value)) throw paramerr(name);
     }
+    if (selects && selects.includes(value)) throw paramerr(name);
     if (!validator(value)) throw paramerr(name);
     fields[name] = getter(value);
   });
@@ -326,6 +335,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
     var name = _ref3.name,
       type = _ref3.type,
       optional = _ref3.optional,
+      selects = _ref3.selects,
       validator = _ref3.validator,
       getter = _ref3.getter;
     var value;
@@ -336,6 +346,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
       value = +strval;
       if (isNaN(value)) throw queryerr(name);
     }
+    if (selects && selects.includes(value)) throw queryerr(name);
     if (!validator(value)) throw queryerr(name);
     fields[name] = getter(value);
   });

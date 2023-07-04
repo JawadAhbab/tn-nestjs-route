@@ -1,14 +1,18 @@
+import { isString } from 'tn-validate'
 import { RouteBodyInfo } from '../../Route/RouteField/RouteBody'
 import { RouteResultJson } from '../../Route/RouteField/RouteResult'
 import { RouteInfo } from '../../Route/RouteInfo'
+import { Selects } from '../../Route/RouteField/accessories/RouteFieldTypes'
+const selectUnion = (selects: Selects) => selects.map(s => (isString(s) ? `'${s}'` : s)).join(' | ')
 
 export const templateRoute = (routeinfo: RouteInfo) => {
   const name = routeinfo.name.replace(/Route$/, '')
   let vartypes = loopableType(routeinfo.bodies)
   const pqfs = [...routeinfo.params, ...routeinfo.queries, ...routeinfo.files]
-  pqfs.forEach(({ type, name, optional }) => {
+  pqfs.forEach(({ type, name, optional, selects }) => {
     const vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type
-    vartypes += `${name}${optional ? '?' : ''}:${vtype}${optional ? ' | null' : ''};`
+    const ttype = selects ? selectUnion(selects) : `${vtype}${optional ? ' | null' : ''}`
+    vartypes += `${name}${optional ? '?' : ''}:${ttype};`
   })
 
   const r = routeinfo.results
@@ -27,12 +31,16 @@ export const axios${name} = (props: AxiosRequestProps<Route${name}Variables, Rou
 type LoopableInfo = RouteBodyInfo[] | RouteResultJson[]
 const loopableType = (infos: LoopableInfo) => {
   let strtype = ''
-  infos.forEach(({ name, type, optional, object }) => {
+  infos.forEach(({ name, type, optional, selects, object }) => {
     const isobj = type === 'object' || type === 'object[]'
-    if (!isobj) strtype += `${name}${optional ? '?' : ''}:${type}${optional ? ' | null' : ''};`
-    else {
+    if (!isobj) {
+      const ttype = selects ? selectUnion(selects) : `${type}${optional ? ' | null' : ''}`
+      strtype += `${name}${optional ? '?' : ''}:${ttype};`
+    } else {
       const isarr = type === 'object[]'
-      strtype += `${name}${optional ? '?' : ''}:{${loopableType(object)}}${isarr ? '[]' : ''}${optional ? ' | null' : ''};` // prettier-ignore
+      const loopttype = `{${loopableType(object)}}${isarr ? '[]' : ''}${optional ? ' | null' : ''}`
+      const ttype = selects ? selectUnion(selects) : loopttype
+      strtype += `${name}${optional ? '?' : ''}:${ttype};`
     }
   })
   return strtype

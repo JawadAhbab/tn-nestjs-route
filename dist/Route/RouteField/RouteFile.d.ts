@@ -6,6 +6,7 @@ export interface RouteFileInfo {
     $file: true;
     name: string;
     type: FileType;
+    selects: null;
     optional: boolean;
     validators: RouteFileInfoValidators;
 }
