@@ -11,6 +11,7 @@ type ParamType = (typeof ptypes)[number]
 type RouteBodyType = (typeof btypes)[number]
 type RouteResultType = (typeof rtypes)[number]
 type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
+type Selects = string[] | number[]
 
 interface RouteInfo {
   $route: true
@@ -29,12 +30,14 @@ interface RouteQueryInfo {
   name: string
   type: QueryType
   optional: boolean
+  selects: Selects | null
 }
 
 interface RouteParamInfo {
   $param: true
   name: string
   type: ParamType
+  selects: Selects | null
   optional: boolean
 }
 
@@ -43,6 +46,7 @@ interface RouteBodyInfo {
   name: string
   type: RouteBodyType
   optional: boolean
+  selects: Selects | null
   object: RouteBodyInfo[]
 }
 
@@ -51,6 +55,7 @@ interface RouteFileInfo {
   name: string
   type: FileType
   optional: boolean
+  selects: null
   validators: RouteFileInfoValidators
 }
 
@@ -65,6 +70,7 @@ interface RouteResultJson {
   name: string
   type: RouteResultType
   optional: boolean
+  selects: Selects | null
   object: RouteResultJson[]
 }
 `
