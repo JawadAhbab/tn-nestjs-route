@@ -253,7 +253,7 @@ var getValue = function getValue(bodyinfo, value) {
   if (type === 'any[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
   if (type === 'object[]' && !tnValidate.isArray(value)) throw bodyerr(name, prefix);
   if (type === 'object' && !tnValidate.isObject(value)) throw bodyerr(name, prefix);
-  if (selects && selects.includes(value)) throw bodyerr(name);
+  if (selects && !selects.includes(value)) throw bodyerr(name);
   if (!validator(value)) throw bodyerr(name, prefix);
   if (type !== 'object' && type !== 'object[]') return getter(value);
   var arr = type === 'object[]';
@@ -322,7 +322,7 @@ var routeFieldsParams = function routeFieldsParams(fields, params, route) {
       value = +strval;
       if (isNaN(value)) throw paramerr(name);
     }
-    if (selects && selects.includes(value)) throw paramerr(name);
+    if (selects && !selects.includes(value)) throw paramerr(name);
     if (!validator(value)) throw paramerr(name);
     fields[name] = getter(value);
   });
@@ -346,7 +346,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
       value = +strval;
       if (isNaN(value)) throw queryerr(name);
     }
-    if (selects && selects.includes(value)) throw queryerr(name);
+    if (selects && !selects.includes(value)) throw queryerr(name);
     if (!validator(value)) throw queryerr(name);
     fields[name] = getter(value);
   });

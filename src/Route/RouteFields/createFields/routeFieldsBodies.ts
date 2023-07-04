@@ -46,7 +46,7 @@ const getValue = (bodyinfo: RouteBodyInfo, value: any, prefix: string[] = []) =>
   if (type === 'any[]' && !isArray(value)) throw bodyerr(name, prefix)
   if (type === 'object[]' && !isArray(value)) throw bodyerr(name, prefix)
   if (type === 'object' && !isObject(value)) throw bodyerr(name, prefix)
-  if (selects && (selects as any[]).includes(value)) throw bodyerr(name)
+  if (selects && !(selects as any[]).includes(value)) throw bodyerr(name)
   if (!validator(value)) throw bodyerr(name, prefix)
 
   if (type !== 'object' && type !== 'object[]') return getter(value)

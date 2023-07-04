@@ -18,7 +18,7 @@ export const routeFieldsQueries = (fields: AnyObject, query: AnyObject, route: R
       if (isNaN(value)) throw queryerr(name)
     }
 
-    if (selects && (selects as any[]).includes(value)) throw queryerr(name)
+    if (selects && !(selects as any[]).includes(value)) throw queryerr(name)
     if (!validator(value)) throw queryerr(name)
     fields[name] = getter(value)
   })

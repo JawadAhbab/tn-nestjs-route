@@ -18,7 +18,7 @@ export const routeFieldsParams = (fields: AnyObject, params: AnyObject, route: R
       if (isNaN(value)) throw paramerr(name)
     }
 
-    if (selects && (selects as any[]).includes(value)) throw paramerr(name)
+    if (selects && !(selects as any[]).includes(value)) throw paramerr(name)
     if (!validator(value)) throw paramerr(name)
     fields[name] = getter(value)
   })
