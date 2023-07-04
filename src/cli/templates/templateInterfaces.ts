@@ -11,7 +11,7 @@ type ParamType = (typeof ptypes)[number]
 type RouteBodyType = (typeof btypes)[number]
 type RouteResultType = (typeof rtypes)[number]
 type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
-type Selects = string[] | number[]
+type Selects = string[] | number[] | readonly number[] | readonly string[]
 
 interface RouteInfo {
   $route: true
