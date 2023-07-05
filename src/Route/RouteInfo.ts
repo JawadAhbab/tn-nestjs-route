@@ -3,6 +3,7 @@ import { RouteFileInfo } from './RouteField/RouteFile'
 import { RouteParamInfo } from './RouteField/RouteParam'
 import { RouteQueryInfo } from './RouteField/RouteQuery'
 import { RouteResultInfo, RouteResultJson } from './RouteField/RouteResult'
+import { getAllProperties } from './accessories/getAllProperties'
 export type RouteMethod = 'GET' | 'POST'
 export interface RouteInfo {
   $route: true
@@ -23,13 +24,14 @@ export const createRouteInfo = (
 ): RouteInfo => {
   const base = routecls.prototype.$routebase
   const name = routecls.name
-  const preparams: RouteParamInfo[] = []
+  const paramsUnindexed: RouteParamInfo[] = []
+  const paramsIndexed: RouteParamInfo[] = []
   const queries: RouteQueryInfo[] = []
   const bodies: RouteBodyInfo[] = []
   const files: RouteFileInfo[] = []
   const paramnames: string[] = []
 
-  Object.getOwnPropertyNames(routecls.prototype).forEach(p => {
+  getAllProperties(routecls).forEach(p => {
     const body = routecls.prototype[p] as RouteBodyInfo
     if (body.$body) return bodies.push(body)
 
@@ -41,8 +43,8 @@ export const createRouteInfo = (
 
     const param = body as unknown as RouteParamInfo
     if (!param.$param) return
-    if (param.index) preparams[param.index] = param
-    else preparams.push(param)
+    if (param.index) paramsIndexed.splice(param.index, 0, param)
+    else paramsUnindexed.push(param)
     paramnames.push(p)
   })
 
@@ -51,7 +53,7 @@ export const createRouteInfo = (
   else if (resultcls?.name === 'Buffer') results = 'Buffer'
   else if (resultcls) {
     const resjson: RouteResultJson[] = []
-    Object.getOwnPropertyNames(resultcls.prototype).forEach(p => {
+    getAllProperties(resultcls).forEach(p => {
       const result = resultcls.prototype[p] as RouteResultJson
       if (result.$result) return resjson.push(result)
     })
@@ -63,6 +65,6 @@ export const createRouteInfo = (
     .replace(/[ \s]+/g, '')
     .replace(/[\\\/]+/g, '/')
 
-  const params = preparams.filter(i => i)
+  const params = [...paramsUnindexed, ...paramsIndexed]
   return { $route: true, name, method, route, queries, params, bodies, files, results }
 }

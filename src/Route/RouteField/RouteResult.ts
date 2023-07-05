@@ -1,5 +1,6 @@
 import { isArray } from 'tn-validate'
 import { Selects } from './accessories/RouteFieldTypes'
+import { getAllProperties } from '../accessories/getAllProperties'
 const rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore
 export type RouteResultType = (typeof rtypes)[number]
 export type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
@@ -33,7 +34,7 @@ export const RouteResult = (opts?: Options) => {
       else {
         const expcls = arr ? explicit[0] : explicit
         typename = arr ? 'object[]' : 'object'
-        Object.getOwnPropertyNames(expcls.prototype).forEach(p => {
+        getAllProperties(expcls).forEach(p => {
           const value = expcls.prototype[p] as RouteResultJson
           if (value.$result) object.push(value)
         })

@@ -10,6 +10,13 @@ var Route = function Route(routebase) {
     target.prototype.$routebase = routebase;
   };
 };
+var getAllProperties = function getAllProperties(cls) {
+  var properties = [];
+  if (cls.prototype) properties.push.apply(properties, _toConsumableArray(Object.getOwnPropertyNames(cls.prototype)));
+  var extend = Object.getPrototypeOf(cls);
+  if (extend) properties.push.apply(properties, _toConsumableArray(getAllProperties(extend)));
+  return properties;
+};
 var btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]']; // prettier-ignore
 var RouteBody = function RouteBody(opts, v) {
   return function (target, name) {
@@ -23,7 +30,7 @@ var RouteBody = function RouteBody(opts, v) {
       if (expname === 'array') typename = 'any[]';else if (btypes.includes(expname)) typename = arr ? "".concat(expname, "[]") : expname;else {
         var expcls = arr ? explicit[0] : explicit;
         typename = arr ? 'object[]' : 'object';
-        Object.getOwnPropertyNames(expcls.prototype).forEach(function (p) {
+        getAllProperties(expcls).forEach(function (p) {
           var value = expcls.prototype[p];
           if (value.$body) object.push(value);
         });
@@ -189,7 +196,7 @@ var RouteResult = function RouteResult(opts) {
       if (expname === 'array') typename = 'any[]';else if (rtypes.includes(expname)) typename = arr ? "".concat(expname, "[]") : expname;else {
         var expcls = arr ? explicit[0] : explicit;
         typename = arr ? 'object[]' : 'object';
-        Object.getOwnPropertyNames(expcls.prototype).forEach(function (p) {
+        getAllProperties(expcls).forEach(function (p) {
           var value = expcls.prototype[p];
           if (value.$result) object.push(value);
         });
@@ -402,12 +409,13 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
 var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
   var name = routecls.name;
-  var preparams = [];
+  var paramsUnindexed = [];
+  var paramsIndexed = [];
   var queries = [];
   var bodies = [];
   var files = [];
   var paramnames = [];
-  Object.getOwnPropertyNames(routecls.prototype).forEach(function (p) {
+  getAllProperties(routecls).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
     var query = body;
@@ -416,13 +424,13 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     if (file.$file) return files.push(file);
     var param = body;
     if (!param.$param) return;
-    if (param.index) preparams[param.index] = param;else preparams.push(param);
+    if (param.index) paramsIndexed.splice(param.index, 0, param);else paramsUnindexed.push(param);
     paramnames.push(p);
   });
   var results = 'String';
   if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'String') results = 'String';else if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'Buffer') results = 'Buffer';else if (resultcls) {
     var resjson = [];
-    Object.getOwnPropertyNames(resultcls.prototype).forEach(function (p) {
+    getAllProperties(resultcls).forEach(function (p) {
       var result = resultcls.prototype[p];
       if (result.$result) return resjson.push(result);
     });
@@ -431,9 +439,7 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
   }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
-  var params = preparams.filter(function (i) {
-    return i;
-  });
+  var params = [].concat(paramsUnindexed, paramsIndexed);
   return {
     $route: true,
     name: name,
