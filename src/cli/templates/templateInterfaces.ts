@@ -35,6 +35,7 @@ interface RouteQueryInfo {
 
 interface RouteParamInfo {
   $param: true
+  index?: number
   name: string
   type: ParamType
   selects: Selects | null

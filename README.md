@@ -12,6 +12,7 @@ class BodySuper {
 class HelloRoute {
   @RouteParam() username: string
   @RouteParam() age: number
+  @RouteIndexParam(0) serial: number
   @RouteBody() count: number
   @RouteBody({ type: BodySuper }) super: BodySuper
   @RouteBody({ type: [BodySuper] }) supermore: BodySuper[]
