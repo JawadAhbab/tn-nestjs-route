@@ -116,12 +116,42 @@ var RouteParam = function RouteParam(opts, v) {
     });
   };
 };
-var qtypes = ['string', 'number', 'boolean'];
-var RouteQuery = function RouteQuery(opts, v) {
+var RouteIndexParam = function RouteIndexParam(index, opts, v) {
   return function (target, name) {
     var _opts$type2;
     var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
     var typename = (opts === null || opts === void 0 ? void 0 : (_opts$type2 = opts.type) === null || _opts$type2 === void 0 ? void 0 : _opts$type2.name) || Reflect.getMetadata('design:type', target, name).name;
+    var type = typename.toLowerCase();
+    if (!ptypes.includes(type)) throw new Error("@RouteIndexParam(".concat(name, ") must be typeof ").concat(ptypes, "\n")); // prettier-ignore
+    var validator = v || function () {
+      return true;
+    };
+    var getter = (opts === null || opts === void 0 ? void 0 : opts.getter) || function (v) {
+      return v;
+    };
+    var get = function get() {
+      return {
+        $param: true,
+        index: index,
+        name: name,
+        type: type,
+        optional: optional,
+        selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
+        validator: validator,
+        getter: getter
+      };
+    };
+    Object.defineProperty(target, name, {
+      get: get
+    });
+  };
+};
+var qtypes = ['string', 'number', 'boolean'];
+var RouteQuery = function RouteQuery(opts, v) {
+  return function (target, name) {
+    var _opts$type3;
+    var optional = (opts === null || opts === void 0 ? void 0 : opts.optional) || false;
+    var typename = (opts === null || opts === void 0 ? void 0 : (_opts$type3 = opts.type) === null || _opts$type3 === void 0 ? void 0 : _opts$type3.name) || Reflect.getMetadata('design:type', target, name).name;
     var type = typename.toLowerCase();
     if (!qtypes.includes(type)) throw new Error("@RouteQuery(".concat(name, ") must be typeof ").concat(qtypes, "\n"));
     var validator = v || function () {
@@ -463,6 +493,7 @@ exports.RouteBody = RouteBody;
 exports.RouteFields = RouteFields;
 exports.RouteFile = RouteFile;
 exports.RouteGet = RouteGet;
+exports.RouteIndexParam = RouteIndexParam;
 exports.RouteParam = RouteParam;
 exports.RoutePost = RoutePost;
 exports.RouteQuery = RouteQuery;

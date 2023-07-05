@@ -1,7 +1,7 @@
 export { Route } from './Route/Route'
 export { RouteBody } from './Route/RouteField/RouteBody'
 export { RouteFile } from './Route/RouteField/RouteFile'
-export { RouteParam } from './Route/RouteField/RouteParam'
+export { RouteIndexParam, RouteParam } from './Route/RouteField/RouteParam'
 export { RouteQuery } from './Route/RouteField/RouteQuery'
 export { RouteResult } from './Route/RouteField/RouteResult'
 export { RouteFields } from './Route/RouteFields/RouteFields'
