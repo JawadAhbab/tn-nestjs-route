@@ -23,7 +23,7 @@ export const createRouteInfo = (
 ): RouteInfo => {
   const base = routecls.prototype.$routebase
   const name = routecls.name
-  const params: RouteParamInfo[] = []
+  const preparams: RouteParamInfo[] = []
   const queries: RouteQueryInfo[] = []
   const bodies: RouteBodyInfo[] = []
   const files: RouteFileInfo[] = []
@@ -41,7 +41,8 @@ export const createRouteInfo = (
 
     const param = body as unknown as RouteParamInfo
     if (!param.$param) return
-    params.push(param)
+    if (param.index) preparams[param.index] = param
+    else preparams.push(param)
     paramnames.push(p)
   })
 
@@ -62,5 +63,6 @@ export const createRouteInfo = (
     .replace(/[ \s]+/g, '')
     .replace(/[\\\/]+/g, '/')
 
+  const params = preparams.filter(i => i)
   return { $route: true, name, method, route, queries, params, bodies, files, results }
 }

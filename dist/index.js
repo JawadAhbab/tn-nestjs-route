@@ -372,7 +372,7 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
 var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
   var name = routecls.name;
-  var params = [];
+  var preparams = [];
   var queries = [];
   var bodies = [];
   var files = [];
@@ -386,7 +386,7 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     if (file.$file) return files.push(file);
     var param = body;
     if (!param.$param) return;
-    params.push(param);
+    if (param.index) preparams[param.index] = param;else preparams.push(param);
     paramnames.push(p);
   });
   var results = 'String';
@@ -401,6 +401,9 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
   }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
+  var params = preparams.filter(function (i) {
+    return i;
+  });
   return {
     $route: true,
     name: name,
