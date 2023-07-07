@@ -59,7 +59,7 @@ export class RoutesController {
 ```json
 [
   {
-    "site": "http://localhost:0000/",
+    "site": "process.env.ENV === 'dev' ? 'http://localhost:0000/' : 'https://cdn.website.com/'",
     "schema": "http://localhost:0000/routes",
     "outpath": "...",
     "loggerImport": "./logger",

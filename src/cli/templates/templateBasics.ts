@@ -27,7 +27,7 @@ const getSecureToken = (name: string, variables: AnyObject, paramstr: string) =>
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
-  const site = '${site.replace(/[\\\/]$/, '')}/'
+  const site = (${site}).replace(/[\\\\\\/]$/, '') + '/'
   const paramstrs: string[] = []
   const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
     const val = variables[k]
