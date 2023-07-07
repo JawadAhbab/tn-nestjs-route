@@ -6,20 +6,23 @@ import { RouteParamInfo } from './RouteField/RouteParam';
 import { RouteQueryInfo } from './RouteField/RouteQuery';
 import { RouteResultInfo } from './RouteField/RouteResult';
 export type RouteMethod = 'GET' | 'POST';
+type RouteSecure = {
+    name: string;
+    timesafe: string | false;
+};
 export interface RouteInfo {
     $route: true;
     route: string;
     method: RouteMethod;
     name: string;
-    secure: false | {
-        name: string;
-    };
+    routesecure: RouteSecure | false;
     cdnconfig: OptionLess<RouteCdnConfig>;
     queries: RouteQueryInfo[];
     params: RouteParamInfo[];
     bodies: RouteBodyInfo[];
     files: RouteFileInfo[];
     results: RouteResultInfo;
-    getSecureSecret: () => string | undefined;
+    getRouteSecureSecret: () => string | undefined;
 }
 export declare const createRouteInfo: (method: RouteMethod, routecls: Function, resultcls?: Function) => RouteInfo;
+export {};

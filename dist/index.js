@@ -228,13 +228,14 @@ var RouteResult = function RouteResult(opts) {
     });
   };
 };
-var RouteSecure = function RouteSecure(secret) {
+var RouteSecure = function RouteSecure(secret, opts) {
   return function (target, name) {
     var get = function get() {
       return {
         $secure: true,
         name: name,
-        secret: secret
+        secret: secret,
+        timesafe: (opts === null || opts === void 0 ? void 0 : opts.timesafe) || false
       };
     };
     Object.defineProperty(target, name, {
@@ -416,21 +417,28 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
   });
 };
 var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
-  if (!route.secure) return;
-  var token = query[route.secure.name];
+  var rs = route.routesecure;
+  if (!rs) return;
+  var token = query[rs.name];
   if (!token) throw new common.UnauthorizedException();
-  var _token$split = token.split('.'),
-    _token$split2 = _slicedToArray(_token$split, 2),
-    expstr = _token$split2[0],
-    hash = _token$split2[1];
-  var remain = +expstr - new Date().getTime();
-  if (remain <= 0 || remain >= ms('2m')) throw new common.UnauthorizedException();
   var paramurl = route.params.map(function (_ref4) {
     var name = _ref4.name;
     return params[name];
   }).join('/');
-  var hashmatch = sha(paramurl + expstr + route.getSecureSecret()).toString();
-  if (hash !== hashmatch) throw new common.UnauthorizedException();
+  var secret = route.getRouteSecureSecret();
+  if (rs.timesafe) {
+    var _token$split = token.split('.'),
+      _token$split2 = _slicedToArray(_token$split, 2),
+      expstr = _token$split2[0],
+      hash = _token$split2[1];
+    var remain = +expstr - new Date().getTime();
+    if (remain <= 0 || remain >= ms(rs.timesafe)) throw new common.UnauthorizedException();
+    var hashmatch = sha(paramurl + expstr + secret).toString();
+    if (hash !== hashmatch) throw new common.UnauthorizedException();
+  } else {
+    var _hashmatch = sha(paramurl + secret).toString();
+    if (token !== _hashmatch) throw new common.UnauthorizedException();
+  }
 };
 var RouteFields = common.createParamDecorator(function (_, ctx) {
   var _routeFieldsEssential = routeFieldsEssentials(ctx),
@@ -454,12 +462,12 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var bodies = [];
   var files = [];
   var paramnames = [];
-  var secureinfo;
+  var routesecure;
   getAllProperties(routecls).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
     var secure = body;
-    if (secure.$secure) return secureinfo = secure;
+    if (secure.$secure) return routesecure = secure;
     var query = body;
     if (query.$query) return queries.push(query);
     var file = body;
@@ -489,8 +497,9 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     }))).join('/').replace(/[\\\/]+/g, '/'),
     method: method,
     name: routecls.name,
-    secure: !secureinfo ? false : {
-      name: secureinfo.name
+    routesecure: !routesecure ? false : {
+      name: routesecure.name,
+      timesafe: routesecure.timesafe
     },
     cdnconfig: cdnconfig,
     queries: queries,
@@ -498,9 +507,9 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     bodies: bodies,
     files: files,
     results: results,
-    getSecureSecret: function getSecureSecret() {
-      var _secureinfo;
-      return (_secureinfo = secureinfo) === null || _secureinfo === void 0 ? void 0 : _secureinfo.secret;
+    getRouteSecureSecret: function getRouteSecureSecret() {
+      var _routesecure;
+      return (_routesecure = routesecure) === null || _routesecure === void 0 ? void 0 : _routesecure.secret;
     }
   };
 };

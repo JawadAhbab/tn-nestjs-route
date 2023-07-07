@@ -8,19 +8,20 @@ import { RouteResultInfo, RouteResultJson } from './RouteField/RouteResult'
 import { RouteSecureInfo } from './RouteField/RouteSecure'
 import { getAllProperties } from './accessories/getAllProperties'
 export type RouteMethod = 'GET' | 'POST'
+type RouteSecure = { name: string; timesafe: string | false }
 export interface RouteInfo {
   $route: true
   route: string
   method: RouteMethod
   name: string
-  secure: false | { name: string }
+  routesecure: RouteSecure | false
   cdnconfig: OptionLess<RouteCdnConfig>
   queries: RouteQueryInfo[]
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
   files: RouteFileInfo[]
   results: RouteResultInfo
-  getSecureSecret: () => string | undefined
+  getRouteSecureSecret: () => string | undefined
 }
 
 export const createRouteInfo = (
@@ -34,14 +35,14 @@ export const createRouteInfo = (
   const bodies: RouteBodyInfo[] = []
   const files: RouteFileInfo[] = []
   const paramnames: string[] = []
-  let secureinfo!: RouteSecureInfo
+  let routesecure!: RouteSecureInfo
 
   getAllProperties(routecls).forEach(p => {
     const body = routecls.prototype[p] as RouteBodyInfo
     if (body.$body) return bodies.push(body)
 
     const secure = body as unknown as RouteSecureInfo
-    if (secure.$secure) return (secureinfo = secure)
+    if (secure.$secure) return (routesecure = secure)
 
     const query = body as unknown as RouteQueryInfo
     if (query.$query) return queries.push(query)
@@ -78,13 +79,13 @@ export const createRouteInfo = (
     route: [base, ...paramnames.map(n => `:${n}`)].join('/').replace(/[\\\/]+/g, '/'),
     method,
     name: routecls.name,
-    secure: !secureinfo ? false : { name: secureinfo.name },
+    routesecure: !routesecure ? false : { name: routesecure.name, timesafe: routesecure.timesafe },
     cdnconfig,
     queries,
     params: [...paramsUnindexed, ...paramsIndexed],
     bodies,
     files,
     results,
-    getSecureSecret: () => secureinfo?.secret,
+    getRouteSecureSecret: () => routesecure?.secret,
   }
 }

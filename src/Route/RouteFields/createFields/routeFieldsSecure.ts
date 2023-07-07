@@ -5,16 +5,23 @@ import { AnyObject } from 'tn-typescript'
 import { RouteInfo } from '../../RouteInfo'
 
 export const routeFieldsSecure = (query: AnyObject, params: AnyObject, route: RouteInfo) => {
-  if (!route.secure) return
+  const rs = route.routesecure
+  if (!rs) return
 
-  const token = query[route.secure.name] as string
+  const token = query[rs.name] as string
   if (!token) throw new UnauthorizedException()
 
-  const [expstr, hash] = token.split('.')
-  const remain = +expstr - new Date().getTime()
-  if (remain <= 0 || remain >= ms('2m')) throw new UnauthorizedException()
-
   const paramurl = route.params.map(({ name }) => params[name]).join('/')
-  const hashmatch = sha(paramurl + expstr + route.getSecureSecret()).toString()
-  if (hash !== hashmatch) throw new UnauthorizedException()
+  const secret = route.getRouteSecureSecret()
+
+  if (rs.timesafe) {
+    const [expstr, hash] = token.split('.')
+    const remain = +expstr - new Date().getTime()
+    if (remain <= 0 || remain >= ms(rs.timesafe)) throw new UnauthorizedException()
+    const hashmatch = sha(paramurl + expstr + secret).toString()
+    if (hash !== hashmatch) throw new UnauthorizedException()
+  } else {
+    const hashmatch = sha(paramurl + secret).toString()
+    if (token !== hashmatch) throw new UnauthorizedException()
+  }
 }

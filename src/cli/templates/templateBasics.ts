@@ -21,11 +21,19 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onFinally?: () => void
 }
 
-const getSecureToken = (name: string, variables: AnyObject, paramstr: string) => {
+const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, paramstrs: string[]) => {
+  const { name, timesafe } = rs
   const secret = variables[name]
-  const exp = new Date().getTime() + ms('2m')
-  const token = exp + '.' + sha(paramstr + exp + secret).toString()
-  return name + '=' + token
+  const paramurl = paramstrs.join('/')
+
+  if (timesafe) {
+    const exp = new Date().getTime() + ms(timesafe)
+    const token = exp + '.' + sha(paramurl + exp + secret).toString()
+    return name + '=' + token
+  } else {
+    const token = sha(paramurl + secret).toString()
+    return name + '=' + token
+  }
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
@@ -39,7 +47,7 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
   }).replace(/^[\\\\\\/]/, '')
 
   const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
-  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramstrs.join('/')))
+  if (info.routesecure) queryarr.push(getRouteSecureToken(info.routesecure, variables, paramstrs))
   const queries = queryarr.join('&')
 
   const site = ${site}

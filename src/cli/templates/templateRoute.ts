@@ -8,7 +8,7 @@ const selectUnion = (selects: Selects) => selects.map(s => (isString(s) ? `'${s}
 export const templateRoute = (routeinfo: RouteInfo) => {
   const name = routeinfo.name.replace(/Route$/, '')
   let vartypes = loopableType(routeinfo.bodies)
-  if (routeinfo.secure) vartypes += `${routeinfo.secure.name}:string;`
+  if (routeinfo.routesecure) vartypes += `${routeinfo.routesecure.name}:string;`
   const pqfs = [...routeinfo.params, ...routeinfo.queries, ...routeinfo.files]
   pqfs.forEach(({ type, name, optional, selects }) => {
     const vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type
