@@ -409,7 +409,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
     fields[name] = getter(value);
   });
 };
-var routeFieldsSecure = function routeFieldsSecure(query, route) {
+var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
   if (!route.secure) return;
   var token = query[route.secure.name];
   if (!token) throw new common.UnauthorizedException();
@@ -419,7 +419,11 @@ var routeFieldsSecure = function routeFieldsSecure(query, route) {
     hash = _token$split2[1];
   var remain = +expstr - new Date().getTime();
   if (remain <= 0 || remain >= ms('2m')) throw new common.UnauthorizedException();
-  var hashmatch = sha(expstr + route.getSecureSecret()).toString();
+  var paramurl = route.params.map(function (_ref4) {
+    var name = _ref4.name;
+    return params[name];
+  }).join('/');
+  var hashmatch = sha(paramurl + expstr + route.getSecureSecret()).toString();
   if (hash !== hashmatch) throw new common.UnauthorizedException();
 };
 var RouteFields = common.createParamDecorator(function (_, ctx) {
@@ -430,7 +434,7 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
     files = _routeFieldsEssential.files,
     route = _routeFieldsEssential.route;
   var fields = {};
-  routeFieldsSecure(query, route);
+  routeFieldsSecure(query, params, route);
   routeFieldsParams(fields, params, route);
   routeFieldsQueries(fields, query, route);
   routeFieldsBodies(fields, body, route);
@@ -514,9 +518,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref4) {
-      var type = _ref4.type,
-        name = _ref4.name;
+    routeinfo.bodies.forEach(function (_ref5) {
+      var type = _ref5.type,
+        name = _ref5.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
