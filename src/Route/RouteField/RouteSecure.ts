@@ -1,5 +1,5 @@
 type TimeUnit = 's' | 'm' | 'h' | 'd' | 'y'
-type Options = { timesafe?: `${string}${TimeUnit}` | false }
+type Options = { timesafe?: `${number}${TimeUnit}` | false }
 export interface RouteSecureInfo {
   $secure: true
   name: string
