@@ -1,4 +1,6 @@
-export const templateBasics = (site: string, loggerImport?: string, loggerMethod?: string) => {
+type Props = { site: string; cdn?: string; loggerImport?: string; loggerMethod?: string }
+
+export const templateBasics = ({ site, cdn, loggerImport, loggerMethod }: Props) => {
   const logger = loggerImport && loggerMethod
   return `
 import axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore
@@ -27,7 +29,6 @@ const getSecureToken = (name: string, variables: AnyObject, paramstr: string) =>
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
-  const site = (${site}).replace(/[\\\\\\/]$/, '') + '/'
   const paramstrs: string[] = []
   const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
     const val = variables[k]
@@ -41,7 +42,11 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
   if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramstrs.join('/')))
   const queries = queryarr.join('&')
 
-  return site + urlr + (queries ? '?' : '') + queries
+  const site = ${site}
+  const cdn = ${cdn ? cdn : 'site'}
+  const address = (info.cdnconfig.cdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'
+
+  return address + urlr + (queries ? '?' : '') + queries
 }
 
 const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {

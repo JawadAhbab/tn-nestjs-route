@@ -7,6 +7,7 @@ import { templateBasics } from './templates/templateBasics'
 import { templateRoute } from './templates/templateRoute'
 interface RouteConfig {
   site: string
+  cdn?: string
   schema: string
   outpath: string
   loggerImport: string
@@ -18,10 +19,10 @@ const configs: RouteConfig[] = fs.readJsonSync(configpath)
 configs.forEach(config => createRouteFile(config))
 
 async function createRouteFile(config: RouteConfig) {
-  const { site, schema, outpath, loggerImport, loggerMethod } = config
+  const { site, cdn, schema, outpath, loggerImport, loggerMethod } = config
   if (!site || !schema || !outpath) throw new Error('Malformed config file\n')
   const routesinfo: RouteInfo[] = (await axios.get(schema, { responseType: 'json' })).data
-  let outdata = templateInterfaces + templateBasics(site, loggerImport, loggerMethod)
+  let outdata = templateInterfaces + templateBasics({ site, cdn, loggerImport, loggerMethod })
   routesinfo.forEach(routeinfo => (outdata += templateRoute(routeinfo)))
   fs.outputFileSync(path.join(process.cwd(), outpath), outdata)
 }

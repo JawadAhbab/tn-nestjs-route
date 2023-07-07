@@ -59,7 +59,8 @@ export class RoutesController {
 ```json
 [
   {
-    "site": "process.env.ENV === 'dev' ? 'http://localhost:0000/' : 'https://cdn.website.com/'",
+    "site": "process.env.SITE",
+    "cdn": "process.env.SITE_CDN",
     "schema": "http://localhost:0000/routes",
     "outpath": "...",
     "loggerImport": "./logger",

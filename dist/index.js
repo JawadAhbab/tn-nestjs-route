@@ -8,9 +8,15 @@ var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
 var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
-var Route = function Route(routebase) {
+var Route = function Route(routebase, cdnconfig) {
   return function (target) {
+    var routecdnconfig = {
+      cdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.cdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.perma) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.secure) || false,
+      perma: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.perma) || false,
+      secure: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.secure) || false
+    };
     target.prototype.$routebase = routebase;
+    target.prototype.$routecdnconfig = routecdnconfig;
   };
 };
 var getAllProperties = function getAllProperties(cls) {
@@ -442,7 +448,6 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
   return fields;
 });
 var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
-  var base = routecls.prototype.$routebase;
   var paramsUnindexed = [];
   var paramsIndexed = [];
   var queries = [];
@@ -473,6 +478,10 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     });
     results = resjson;
   }
+  var cdnconfig = routecls.prototype.$routecdnconfig;
+  var base = routecls.prototype.$routebase;
+  if (cdnconfig.perma) base += '/-perma-/';
+  if (cdnconfig.secure) base += '/-secure-/';
   var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
   }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
@@ -483,6 +492,7 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     bodies: bodies,
     files: files,
     results: results,
+    cdnconfig: cdnconfig,
     $route: true,
     name: routecls.name,
     secure: !secureinfo ? false : {

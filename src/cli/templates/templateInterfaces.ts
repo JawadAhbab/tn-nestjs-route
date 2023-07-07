@@ -19,11 +19,18 @@ interface RouteInfo {
   method: RouteMethod
   name: string
   secure: false | { name: string }
+  cdnconfig: RouteCdnConfig
   queries: RouteQueryInfo[]
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
   files: RouteFileInfo[]
   results: RouteResultInfo
+}
+
+interface RouteCdnConfig {
+  cdn: boolean
+  perma: boolean
+  secure: boolean
 }
 
 interface RouteQueryInfo {

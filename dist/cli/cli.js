@@ -28,10 +28,14 @@ function _interopNamespaceDefault(e) {
 }
 var fs__namespace = /*#__PURE__*/_interopNamespaceDefault(fs);
 var path__namespace = /*#__PURE__*/_interopNamespaceDefault(path);
-var templateInterfaces = "\nconst qtypes = ['string', 'number', 'boolean'] as const\nconst ptypes = ['string', 'number', 'boolean'] as const\nconst btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore\nconst rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore\nconst filetypes = ['file', 'file[]'] as const\ntype RouteMethod = 'GET' | 'POST'\ntype FileType = (typeof filetypes)[number]\ntype QueryType = (typeof qtypes)[number]\ntype ParamType = (typeof ptypes)[number]\ntype RouteBodyType = (typeof btypes)[number]\ntype RouteResultType = (typeof rtypes)[number]\ntype RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'\ntype Selects = string[] | number[] | readonly number[] | readonly string[]\n\ninterface RouteInfo {\n  $route: true\n  route: string\n  method: RouteMethod\n  name: string\n  secure: false | { name: string }\n  queries: RouteQueryInfo[]\n  params: RouteParamInfo[]\n  bodies: RouteBodyInfo[]\n  files: RouteFileInfo[]\n  results: RouteResultInfo\n}\n\ninterface RouteQueryInfo {\n  $query: true\n  name: string\n  type: QueryType\n  optional: boolean\n  selects: Selects | null\n}\n\ninterface RouteParamInfo {\n  $param: true\n  index?: number\n  name: string\n  type: ParamType\n  selects: Selects | null\n  optional: boolean\n}\n\ninterface RouteBodyInfo {\n  $body: true\n  name: string\n  type: RouteBodyType\n  optional: boolean\n  selects: Selects | null\n  object: RouteBodyInfo[]\n}\n\ninterface RouteFileInfo {\n  $file: true\n  name: string\n  type: FileType\n  optional: boolean\n  selects: null\n  validators: RouteFileInfoValidators\n}\n\ninterface RouteFileInfoValidators {\n  maxsize: number\n  limit: number\n  mimetypes: null | string[]\n}\n\ninterface RouteResultJson {\n  $result: true\n  name: string\n  type: RouteResultType\n  optional: boolean\n  selects: Selects | null\n  object: RouteResultJson[]\n}\n";
-var templateBasics = function templateBasics(site, loggerImport, loggerMethod) {
+var templateInterfaces = "\nconst qtypes = ['string', 'number', 'boolean'] as const\nconst ptypes = ['string', 'number', 'boolean'] as const\nconst btypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore\nconst rtypes = ['string', 'number', 'boolean', 'object', 'string[]', 'number[]', 'boolean[]', 'object[]', 'any[]'] as const // prettier-ignore\nconst filetypes = ['file', 'file[]'] as const\ntype RouteMethod = 'GET' | 'POST'\ntype FileType = (typeof filetypes)[number]\ntype QueryType = (typeof qtypes)[number]\ntype ParamType = (typeof ptypes)[number]\ntype RouteBodyType = (typeof btypes)[number]\ntype RouteResultType = (typeof rtypes)[number]\ntype RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'\ntype Selects = string[] | number[] | readonly number[] | readonly string[]\n\ninterface RouteInfo {\n  $route: true\n  route: string\n  method: RouteMethod\n  name: string\n  secure: false | { name: string }\n  cdnconfig: RouteCdnConfig\n  queries: RouteQueryInfo[]\n  params: RouteParamInfo[]\n  bodies: RouteBodyInfo[]\n  files: RouteFileInfo[]\n  results: RouteResultInfo\n}\n\ninterface RouteCdnConfig {\n  cdn: boolean\n  perma: boolean\n  secure: boolean\n}\n\ninterface RouteQueryInfo {\n  $query: true\n  name: string\n  type: QueryType\n  optional: boolean\n  selects: Selects | null\n}\n\ninterface RouteParamInfo {\n  $param: true\n  index?: number\n  name: string\n  type: ParamType\n  selects: Selects | null\n  optional: boolean\n}\n\ninterface RouteBodyInfo {\n  $body: true\n  name: string\n  type: RouteBodyType\n  optional: boolean\n  selects: Selects | null\n  object: RouteBodyInfo[]\n}\n\ninterface RouteFileInfo {\n  $file: true\n  name: string\n  type: FileType\n  optional: boolean\n  selects: null\n  validators: RouteFileInfoValidators\n}\n\ninterface RouteFileInfoValidators {\n  maxsize: number\n  limit: number\n  mimetypes: null | string[]\n}\n\ninterface RouteResultJson {\n  $result: true\n  name: string\n  type: RouteResultType\n  optional: boolean\n  selects: Selects | null\n  object: RouteResultJson[]\n}\n";
+var templateBasics = function templateBasics(_ref) {
+  var site = _ref.site,
+    cdn = _ref.cdn,
+    loggerImport = _ref.loggerImport,
+    loggerMethod = _ref.loggerMethod;
   var logger = loggerImport && loggerMethod;
-  return "\nimport axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore\nimport { AnyObject } from 'tn-typescript'\nimport sha from 'crypto-js/sha256'\nimport ms from 'ms'\n".concat(logger ? "import { ".concat(loggerMethod, " } from '").concat(loggerImport, "'") : '', "\n\nexport type RouteAuth = (callback: (accessToken: string) => void) => void\ninterface AxiosRequestProps<V = AnyObject, R = any> {\n  auth?: RouteAuth\n  variables?: V\n  signal?: AbortSignal\n  headers?: AnyObject\n  onProgress?: (e: AxiosProgressEvent) => void\n  onSuccess?: (data: R, res: AxiosResponse<R>) => void\n  onError?: (err: AxiosError) => void\n  onFinally?: () => void\n}\n\nconst getSecureToken = (name: string, variables: AnyObject, paramstr: string) => {\n  const secret = variables[name]\n  const exp = new Date().getTime() + ms('2m')\n  const token = exp + '.' + sha(paramstr + exp + secret).toString()\n  return name + '=' + token\n}\n\nconst createUrl = (info: RouteInfo, variables: AnyObject) => {\n  const site = (").concat(site, ").replace(/[\\\\\\/]$/, '') + '/'\n  const paramstrs: string[] = []\n  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {\n    const val = variables[k]\n    const isnull = val === null || val === undefined\n    const value = isnull ? '-' : encodeURIComponent(val)\n    paramstrs.push(value)\n    return value\n  }).replace(/^[\\\\\\/]/, '')\n\n  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))\n  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramstrs.join('/')))\n  const queries = queryarr.join('&')\n\n  return site + urlr + (queries ? '?' : '') + queries\n}\n\nconst createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {\n  const { onProgress, onSuccess, onError, onFinally, signal } = props\n  const { auth, variables = {}, headers = {} } = props\n  const url = createUrl(info, variables)\n  const multipart = !!info.files.length\n  if (multipart) headers['Content-Type'] = false\n\n  let responseType: ResponseType = 'json'\n  if (info.results === 'Buffer') responseType = 'arraybuffer'\n  else if (info.results === 'String') responseType = 'text'\n\n  let data: AnyObject | FormData\n  if (multipart) {\n    const formdata = new FormData()\n    const entries = [...info.files, ...info.bodies]\n    entries.forEach(({ name }) => {\n      const entry = variables[name]\n      if (entry) formdata.set(name, entry)\n    })\n    data = formdata\n  } else {\n    const simpledata: AnyObject = {}\n    info.bodies.forEach(({ name }) => (simpledata[name] = variables[name]))\n    data = simpledata\n  }\n\n  const sendRequest = (accessToken?: string) => {\n    if (accessToken) headers.authorization = `Bearer ${accessToken}`\n    const req: AxiosRequestConfig = { method: info.method, url, signal, responseType, data, headers, onUploadProgress: onProgress } // prettier-ignore\n    ").concat(logger ? "".concat(loggerMethod, "(req)") : '', "\n    axios\n      .request(req)\n      .then(res => onSuccess && onSuccess(res.data, res))\n      .catch(err => onError && onError(err))\n      .finally(() => onFinally && onFinally())\n  }\n\n  if (!auth) sendRequest()\n  else auth((accessToken) => sendRequest(accessToken)) \n}\n");
+  return "\nimport axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore\nimport { AnyObject } from 'tn-typescript'\nimport sha from 'crypto-js/sha256'\nimport ms from 'ms'\n".concat(logger ? "import { ".concat(loggerMethod, " } from '").concat(loggerImport, "'") : '', "\n\nexport type RouteAuth = (callback: (accessToken: string) => void) => void\ninterface AxiosRequestProps<V = AnyObject, R = any> {\n  auth?: RouteAuth\n  variables?: V\n  signal?: AbortSignal\n  headers?: AnyObject\n  onProgress?: (e: AxiosProgressEvent) => void\n  onSuccess?: (data: R, res: AxiosResponse<R>) => void\n  onError?: (err: AxiosError) => void\n  onFinally?: () => void\n}\n\nconst getSecureToken = (name: string, variables: AnyObject, paramstr: string) => {\n  const secret = variables[name]\n  const exp = new Date().getTime() + ms('2m')\n  const token = exp + '.' + sha(paramstr + exp + secret).toString()\n  return name + '=' + token\n}\n\nconst createUrl = (info: RouteInfo, variables: AnyObject) => {\n  const paramstrs: string[] = []\n  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {\n    const val = variables[k]\n    const isnull = val === null || val === undefined\n    const value = isnull ? '-' : encodeURIComponent(val)\n    paramstrs.push(value)\n    return value\n  }).replace(/^[\\\\\\/]/, '')\n\n  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))\n  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramstrs.join('/')))\n  const queries = queryarr.join('&')\n\n  const site = ").concat(site, "\n  const cdn = ").concat(cdn ? cdn : 'site', "\n  const address = (info.cdnconfig.cdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'\n\n  return address + urlr + (queries ? '?' : '') + queries\n}\n\nconst createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {\n  const { onProgress, onSuccess, onError, onFinally, signal } = props\n  const { auth, variables = {}, headers = {} } = props\n  const url = createUrl(info, variables)\n  const multipart = !!info.files.length\n  if (multipart) headers['Content-Type'] = false\n\n  let responseType: ResponseType = 'json'\n  if (info.results === 'Buffer') responseType = 'arraybuffer'\n  else if (info.results === 'String') responseType = 'text'\n\n  let data: AnyObject | FormData\n  if (multipart) {\n    const formdata = new FormData()\n    const entries = [...info.files, ...info.bodies]\n    entries.forEach(({ name }) => {\n      const entry = variables[name]\n      if (entry) formdata.set(name, entry)\n    })\n    data = formdata\n  } else {\n    const simpledata: AnyObject = {}\n    info.bodies.forEach(({ name }) => (simpledata[name] = variables[name]))\n    data = simpledata\n  }\n\n  const sendRequest = (accessToken?: string) => {\n    if (accessToken) headers.authorization = `Bearer ${accessToken}`\n    const req: AxiosRequestConfig = { method: info.method, url, signal, responseType, data, headers, onUploadProgress: onProgress } // prettier-ignore\n    ").concat(logger ? "".concat(loggerMethod, "(req)") : '', "\n    axios\n      .request(req)\n      .then(res => onSuccess && onSuccess(res.data, res))\n      .catch(err => onError && onError(err))\n      .finally(() => onFinally && onFinally())\n  }\n\n  if (!auth) sendRequest()\n  else auth((accessToken) => sendRequest(accessToken)) \n}\n");
 };
 var selectUnion = function selectUnion(selects) {
   return selects.map(function (s) {
@@ -43,11 +47,11 @@ var templateRoute = function templateRoute(routeinfo) {
   var vartypes = loopableType(routeinfo.bodies);
   if (routeinfo.secure) vartypes += "".concat(routeinfo.secure.name, ":string;");
   var pqfs = [].concat(_toConsumableArray(routeinfo.params), _toConsumableArray(routeinfo.queries), _toConsumableArray(routeinfo.files));
-  pqfs.forEach(function (_ref) {
-    var type = _ref.type,
-      name = _ref.name,
-      optional = _ref.optional,
-      selects = _ref.selects;
+  pqfs.forEach(function (_ref2) {
+    var type = _ref2.type,
+      name = _ref2.name,
+      optional = _ref2.optional,
+      selects = _ref2.selects;
     var vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type;
     var ttype = selects ? selectUnion(selects) : "".concat(vtype).concat(optional ? ' | null' : '');
     vartypes += "".concat(name).concat(optional ? '?' : '', ":").concat(ttype, ";");
@@ -59,12 +63,12 @@ var templateRoute = function templateRoute(routeinfo) {
 };
 var loopableType = function loopableType(infos) {
   var strtype = '';
-  infos.forEach(function (_ref2) {
-    var name = _ref2.name,
-      type = _ref2.type,
-      optional = _ref2.optional,
-      selects = _ref2.selects,
-      object = _ref2.object;
+  infos.forEach(function (_ref3) {
+    var name = _ref3.name,
+      type = _ref3.type,
+      optional = _ref3.optional,
+      selects = _ref3.selects,
+      object = _ref3.object;
     var isobj = type === 'object' || type === 'object[]';
     if (!isobj) {
       var ttype = selects ? selectUnion(selects) : "".concat(type).concat(optional ? ' | null' : '');
@@ -88,11 +92,11 @@ function createRouteFile(_x) {
 }
 function _createRouteFile() {
   _createRouteFile = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(config) {
-    var site, schema, outpath, loggerImport, loggerMethod, routesinfo, outdata;
+    var site, cdn, schema, outpath, loggerImport, loggerMethod, routesinfo, outdata;
     return _regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) switch (_context.prev = _context.next) {
         case 0:
-          site = config.site, schema = config.schema, outpath = config.outpath, loggerImport = config.loggerImport, loggerMethod = config.loggerMethod;
+          site = config.site, cdn = config.cdn, schema = config.schema, outpath = config.outpath, loggerImport = config.loggerImport, loggerMethod = config.loggerMethod;
           if (!(!site || !schema || !outpath)) {
             _context.next = 3;
             break;
@@ -105,7 +109,12 @@ function _createRouteFile() {
           });
         case 5:
           routesinfo = _context.sent.data;
-          outdata = templateInterfaces + templateBasics(site, loggerImport, loggerMethod);
+          outdata = templateInterfaces + templateBasics({
+            site: site,
+            cdn: cdn,
+            loggerImport: loggerImport,
+            loggerMethod: loggerMethod
+          });
           routesinfo.forEach(function (routeinfo) {
             return outdata += templateRoute(routeinfo);
           });

@@ -1,3 +1,5 @@
+import { OptionLess } from 'tn-typescript';
+import { RouteCdnConfig } from './Route';
 import { RouteBodyInfo } from './RouteField/RouteBody';
 import { RouteFileInfo } from './RouteField/RouteFile';
 import { RouteParamInfo } from './RouteField/RouteParam';
@@ -12,6 +14,7 @@ export interface RouteInfo {
     secure: false | {
         name: string;
     };
+    cdnconfig: OptionLess<RouteCdnConfig>;
     queries: RouteQueryInfo[];
     params: RouteParamInfo[];
     bodies: RouteBodyInfo[];

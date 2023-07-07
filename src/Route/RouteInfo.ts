@@ -1,3 +1,5 @@
+import { OptionLess } from 'tn-typescript'
+import { RouteCdnConfig } from './Route'
 import { RouteBodyInfo } from './RouteField/RouteBody'
 import { RouteFileInfo } from './RouteField/RouteFile'
 import { RouteParamInfo } from './RouteField/RouteParam'
@@ -12,6 +14,7 @@ export interface RouteInfo {
   method: RouteMethod
   name: string
   secure: false | { name: string }
+  cdnconfig: OptionLess<RouteCdnConfig>
   queries: RouteQueryInfo[]
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
@@ -25,7 +28,6 @@ export const createRouteInfo = (
   routecls: Function,
   resultcls?: Function
 ): RouteInfo => {
-  const base = routecls.prototype.$routebase
   const paramsUnindexed: RouteParamInfo[] = []
   const paramsIndexed: RouteParamInfo[] = []
   const queries: RouteQueryInfo[] = []
@@ -66,6 +68,11 @@ export const createRouteInfo = (
     results = resjson
   }
 
+  const cdnconfig = routecls.prototype.$routecdnconfig as OptionLess<RouteCdnConfig>
+  let base = routecls.prototype.$routebase
+  if (cdnconfig.perma) base += '/-perma-/'
+  if (cdnconfig.secure) base += '/-secure-/'
+
   const route = [base, ...paramnames.map(n => `:${n}`)]
     .join('/')
     .replace(/[ \s]+/g, '')
@@ -78,6 +85,7 @@ export const createRouteInfo = (
     bodies,
     files,
     results,
+    cdnconfig,
     $route: true,
     name: routecls.name,
     secure: !secureinfo ? false : { name: secureinfo.name },
