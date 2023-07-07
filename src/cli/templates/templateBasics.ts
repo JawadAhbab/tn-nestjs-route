@@ -19,26 +19,29 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onFinally?: () => void
 }
 
-const getSecureToken = (name: string, variables: AnyObject, paramurl: string) => {
+const getSecureToken = (name: string, variables: AnyObject, paramstr: string) => {
   const secret = variables[name]
   const exp = new Date().getTime() + ms('2m')
-  const token = exp + '.' + sha(paramurl + exp + secret).toString()
+  const token = exp + '.' + sha(paramstr + exp + secret).toString()
   return name + '=' + token
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const site = '${site.replace(/[\\\/]$/, '')}/'
-  const paramurl = info.route.replace(/\\:(\\w+)/g, (_, k) => {
+  const paramstrs: string[] = []
+  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
     const val = variables[k]
     const isnull = val === null || val === undefined
-    return isnull ? '-' : encodeURIComponent(val)
+    const value = isnull ? '-' : encodeURIComponent(val)
+    paramstrs.push(value)
+    return value
   }).replace(/^[\\\\\\/]/, '')
 
   const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
-  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramurl))
+  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables, paramstrs.join('/')))
   const queries = queryarr.join('&')
 
-  return site + paramurl + (queries ? '?' : '') + queries
+  return site + urlr + (queries ? '?' : '') + queries
 }
 
 const createAxiosRequest = (info: RouteInfo, props: AxiosRequestProps) => {
