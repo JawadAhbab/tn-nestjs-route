@@ -18,6 +18,7 @@ interface RouteInfo {
   route: string
   method: RouteMethod
   name: string
+  secure: boolean
   queries: RouteQueryInfo[]
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]

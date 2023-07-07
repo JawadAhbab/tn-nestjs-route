@@ -3,11 +3,12 @@ import { RouteBodyInfo } from '../../Route/RouteField/RouteBody'
 import { RouteResultJson } from '../../Route/RouteField/RouteResult'
 import { RouteInfo } from '../../Route/RouteInfo'
 import { Selects } from '../../Route/RouteField/accessories/RouteFieldTypes'
-const selectUnion = (selects: Selects) => selects.map(s => (isString(s) ? `'${s}'` : s)).join(' | ')
+const selectUnion = (selects: Selects) => selects.map(s => (isString(s) ? `'${s}'` : s)).join('|')
 
 export const templateRoute = (routeinfo: RouteInfo) => {
   const name = routeinfo.name.replace(/Route$/, '')
   let vartypes = loopableType(routeinfo.bodies)
+  if (routeinfo.secure) vartypes += `${routeinfo.secure.name}:string;`
   const pqfs = [...routeinfo.params, ...routeinfo.queries, ...routeinfo.files]
   pqfs.forEach(({ type, name, optional, selects }) => {
     const vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type

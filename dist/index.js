@@ -1,9 +1,12 @@
 'use strict';
 
+var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
+var md5 = require('crypto-js/md5');
+var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
 var Route = function Route(routebase) {
   return function (target) {
@@ -219,6 +222,20 @@ var RouteResult = function RouteResult(opts) {
     });
   };
 };
+var RouteSecure = function RouteSecure(secret) {
+  return function (target, name) {
+    var get = function get() {
+      return {
+        $secure: true,
+        name: name,
+        secret: secret
+      };
+    };
+    Object.defineProperty(target, name, {
+      get: get
+    });
+  };
+};
 var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   var req = ctx.switchToHttp().getRequest();
   var _req$params = req.params,
@@ -392,6 +409,19 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
     fields[name] = getter(value);
   });
 };
+var routeFieldsSecure = function routeFieldsSecure(query, route) {
+  if (!route.secure) return;
+  var token = query[route.secure.name];
+  if (!token) throw new common.UnauthorizedException();
+  var _token$split = token.split('.'),
+    _token$split2 = _slicedToArray(_token$split, 2),
+    expstr = _token$split2[0],
+    hash = _token$split2[1];
+  var remain = +expstr - new Date().getTime();
+  if (remain <= 0 || remain >= ms('2m')) throw new common.UnauthorizedException();
+  var hashmatch = md5(expstr + route.getSecureSecret()).toString();
+  if (hash !== hashmatch) throw new common.UnauthorizedException();
+};
 var RouteFields = common.createParamDecorator(function (_, ctx) {
   var _routeFieldsEssential = routeFieldsEssentials(ctx),
     params = _routeFieldsEssential.params,
@@ -400,6 +430,7 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
     files = _routeFieldsEssential.files,
     route = _routeFieldsEssential.route;
   var fields = {};
+  routeFieldsSecure(query, route);
   routeFieldsParams(fields, params, route);
   routeFieldsQueries(fields, query, route);
   routeFieldsBodies(fields, body, route);
@@ -408,16 +439,18 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
 });
 var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
-  var name = routecls.name;
   var paramsUnindexed = [];
   var paramsIndexed = [];
   var queries = [];
   var bodies = [];
   var files = [];
   var paramnames = [];
+  var secureinfo;
   getAllProperties(routecls).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
+    var secure = body;
+    if (secure.$secure) return secureinfo = secure;
     var query = body;
     if (query.$query) return queries.push(query);
     var file = body;
@@ -439,17 +472,23 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
   }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
-  var params = [].concat(paramsUnindexed, paramsIndexed);
   return {
-    $route: true,
-    name: name,
     method: method,
     route: route,
     queries: queries,
-    params: params,
     bodies: bodies,
     files: files,
-    results: results
+    results: results,
+    $route: true,
+    name: routecls.name,
+    secure: !secureinfo ? false : {
+      name: secureinfo.name
+    },
+    params: [].concat(paramsUnindexed, paramsIndexed),
+    getSecureSecret: function getSecureSecret() {
+      var _secureinfo;
+      return (_secureinfo = secureinfo) === null || _secureinfo === void 0 ? void 0 : _secureinfo.secret;
+    }
   };
 };
 var RouteGet = function RouteGet(routecls, resultcls) {
@@ -504,5 +543,6 @@ exports.RouteParam = RouteParam;
 exports.RoutePost = RoutePost;
 exports.RouteQuery = RouteQuery;
 exports.RouteResult = RouteResult;
+exports.RouteSecure = RouteSecure;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;

@@ -10,6 +10,7 @@ class BodySuper {
 
 @Route('user')
 class HelloRoute {
+  @RouteSecure('secret') token: string
   @RouteParam() username: string
   @RouteParam() age: number
   @RouteIndexParam(0) serial: number

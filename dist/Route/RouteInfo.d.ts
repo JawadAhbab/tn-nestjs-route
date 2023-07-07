@@ -9,10 +9,14 @@ export interface RouteInfo {
     route: string;
     method: RouteMethod;
     name: string;
+    secure: false | {
+        name: string;
+    };
     queries: RouteQueryInfo[];
     params: RouteParamInfo[];
     bodies: RouteBodyInfo[];
     files: RouteFileInfo[];
     results: RouteResultInfo;
+    getSecureSecret: () => string | undefined;
 }
 export declare const createRouteInfo: (method: RouteMethod, routecls: Function, resultcls?: Function) => RouteInfo;

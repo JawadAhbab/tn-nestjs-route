@@ -3,6 +3,7 @@ import { RouteFileInfo } from './RouteField/RouteFile'
 import { RouteParamInfo } from './RouteField/RouteParam'
 import { RouteQueryInfo } from './RouteField/RouteQuery'
 import { RouteResultInfo, RouteResultJson } from './RouteField/RouteResult'
+import { RouteSecureInfo } from './RouteField/RouteSecure'
 import { getAllProperties } from './accessories/getAllProperties'
 export type RouteMethod = 'GET' | 'POST'
 export interface RouteInfo {
@@ -10,11 +11,13 @@ export interface RouteInfo {
   route: string
   method: RouteMethod
   name: string
+  secure: false | { name: string }
   queries: RouteQueryInfo[]
   params: RouteParamInfo[]
   bodies: RouteBodyInfo[]
   files: RouteFileInfo[]
   results: RouteResultInfo
+  getSecureSecret: () => string | undefined
 }
 
 export const createRouteInfo = (
@@ -23,17 +26,20 @@ export const createRouteInfo = (
   resultcls?: Function
 ): RouteInfo => {
   const base = routecls.prototype.$routebase
-  const name = routecls.name
   const paramsUnindexed: RouteParamInfo[] = []
   const paramsIndexed: RouteParamInfo[] = []
   const queries: RouteQueryInfo[] = []
   const bodies: RouteBodyInfo[] = []
   const files: RouteFileInfo[] = []
   const paramnames: string[] = []
+  let secureinfo!: RouteSecureInfo
 
   getAllProperties(routecls).forEach(p => {
     const body = routecls.prototype[p] as RouteBodyInfo
     if (body.$body) return bodies.push(body)
+
+    const secure = body as unknown as RouteSecureInfo
+    if (secure.$secure) return (secureinfo = secure)
 
     const query = body as unknown as RouteQueryInfo
     if (query.$query) return queries.push(query)
@@ -65,6 +71,17 @@ export const createRouteInfo = (
     .replace(/[ \s]+/g, '')
     .replace(/[\\\/]+/g, '/')
 
-  const params = [...paramsUnindexed, ...paramsIndexed]
-  return { $route: true, name, method, route, queries, params, bodies, files, results }
+  return {
+    method,
+    route,
+    queries,
+    bodies,
+    files,
+    results,
+    $route: true,
+    name: routecls.name,
+    secure: !secureinfo ? false : { name: secureinfo.name },
+    params: [...paramsUnindexed, ...paramsIndexed],
+    getSecureSecret: () => secureinfo?.secret,
+  }
 }

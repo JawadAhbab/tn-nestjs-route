@@ -3,6 +3,8 @@ export const templateBasics = (site: string, loggerImport?: string, loggerMethod
   return `
 import axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore
 import { AnyObject } from 'tn-typescript'
+import md5 from 'crypto-js/md5'
+import ms from 'ms'
 ${logger ? `import { ${loggerMethod} } from '${loggerImport}'` : ''}
 
 export type RouteAuth = (callback: (accessToken: string) => void) => void
@@ -17,9 +19,18 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onFinally?: () => void
 }
 
+const getSecureToken = (name: string, variables: AnyObject) => {
+  const secret = variables[name]
+  const exp = new Date().getTime() + ms('2m')
+  const token = exp + '.' + md5(exp + secret)
+  return name + '=' + token
+}
+
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const site = '${site.replace(/[\\\/]$/, '')}/'
-  const queries = info.queries.map(({ name }) => name + '=' + String(variables[name])).join('&')
+  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
+  if (info.secure) queryarr.push(getSecureToken(info.secure.name, variables))
+  const queries = queryarr.join('&')
   const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
     const val = variables[k]
     const isnull = val === null || val === undefined
