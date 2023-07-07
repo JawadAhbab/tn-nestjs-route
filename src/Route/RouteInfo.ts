@@ -70,26 +70,21 @@ export const createRouteInfo = (
 
   const cdnconfig = routecls.prototype.$routecdnconfig as OptionLess<RouteCdnConfig>
   let base = routecls.prototype.$routebase
-  if (cdnconfig.perma) base += '/-perma-/'
-  if (cdnconfig.secure) base += '/-secure-/'
-
-  const route = [base, ...paramnames.map(n => `:${n}`)]
-    .join('/')
-    .replace(/[ \s]+/g, '')
-    .replace(/[\\\/]+/g, '/')
+  if (cdnconfig.secure) base = '/-secure-/' + base
+  if (cdnconfig.perma) base = '/-perma-/' + base
 
   return {
+    $route: true,
+    route: [base, ...paramnames.map(n => `:${n}`)].join('/').replace(/[\\\/]+/g, '/'),
     method,
-    route,
+    name: routecls.name,
+    secure: !secureinfo ? false : { name: secureinfo.name },
+    cdnconfig,
     queries,
+    params: [...paramsUnindexed, ...paramsIndexed],
     bodies,
     files,
     results,
-    cdnconfig,
-    $route: true,
-    name: routecls.name,
-    secure: !secureinfo ? false : { name: secureinfo.name },
-    params: [...paramsUnindexed, ...paramsIndexed],
     getSecureSecret: () => secureinfo?.secret,
   }
 }

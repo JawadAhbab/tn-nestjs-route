@@ -480,25 +480,24 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   }
   var cdnconfig = routecls.prototype.$routecdnconfig;
   var base = routecls.prototype.$routebase;
-  if (cdnconfig.perma) base += '/-perma-/';
-  if (cdnconfig.secure) base += '/-secure-/';
-  var route = [base].concat(_toConsumableArray(paramnames.map(function (n) {
-    return ":".concat(n);
-  }))).join('/').replace(/[ \s]+/g, '').replace(/[\\\/]+/g, '/');
+  if (cdnconfig.secure) base = '/-secure-/' + base;
+  if (cdnconfig.perma) base = '/-perma-/' + base;
   return {
-    method: method,
-    route: route,
-    queries: queries,
-    bodies: bodies,
-    files: files,
-    results: results,
-    cdnconfig: cdnconfig,
     $route: true,
+    route: [base].concat(_toConsumableArray(paramnames.map(function (n) {
+      return ":".concat(n);
+    }))).join('/').replace(/[\\\/]+/g, '/'),
+    method: method,
     name: routecls.name,
     secure: !secureinfo ? false : {
       name: secureinfo.name
     },
+    cdnconfig: cdnconfig,
+    queries: queries,
     params: [].concat(paramsUnindexed, paramsIndexed),
+    bodies: bodies,
+    files: files,
+    results: results,
     getSecureSecret: function getSecureSecret() {
       var _secureinfo;
       return (_secureinfo = secureinfo) === null || _secureinfo === void 0 ? void 0 : _secureinfo.secret;
