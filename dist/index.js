@@ -5,7 +5,7 @@ var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
-var md5 = require('crypto-js/md5');
+var sha = require('crypto-js/sha256');
 var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
 var Route = function Route(routebase) {
@@ -419,7 +419,7 @@ var routeFieldsSecure = function routeFieldsSecure(query, route) {
     hash = _token$split2[1];
   var remain = +expstr - new Date().getTime();
   if (remain <= 0 || remain >= ms('2m')) throw new common.UnauthorizedException();
-  var hashmatch = md5(expstr + route.getSecureSecret()).toString();
+  var hashmatch = sha(expstr + route.getSecureSecret()).toString();
   if (hash !== hashmatch) throw new common.UnauthorizedException();
 };
 var RouteFields = common.createParamDecorator(function (_, ctx) {

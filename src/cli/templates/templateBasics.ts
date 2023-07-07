@@ -3,7 +3,7 @@ export const templateBasics = (site: string, loggerImport?: string, loggerMethod
   return `
 import axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore
 import { AnyObject } from 'tn-typescript'
-import md5 from 'crypto-js/md5'
+import sha from 'crypto-js/sha256'
 import ms from 'ms'
 ${logger ? `import { ${loggerMethod} } from '${loggerImport}'` : ''}
 
@@ -22,7 +22,7 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
 const getSecureToken = (name: string, variables: AnyObject) => {
   const secret = variables[name]
   const exp = new Date().getTime() + ms('2m')
-  const token = exp + '.' + md5(exp + secret)
+  const token = exp + '.' + sha(exp + secret).toString()
   return name + '=' + token
 }
 
