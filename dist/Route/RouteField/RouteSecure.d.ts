@@ -1,6 +1,6 @@
-type TimeUnit = 's' | 'm' | 'h' | 'd' | 'y';
+import { TimeString } from '../accessories/TimeString';
 type Options = {
-    timesafe?: `${number}${TimeUnit}` | false;
+    timesafe?: TimeString | false;
     query?: boolean;
 };
 export interface RouteSecureInfo {

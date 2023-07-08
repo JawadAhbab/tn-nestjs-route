@@ -31,7 +31,7 @@ interface RouteInfo {
 interface RouteCdnConfig {
   bunnycdn: boolean
   bunnyperma: boolean
-  bunnysecure: boolean
+  bunnysecure: false | string
 }
 
 interface RouteQueryInfo {

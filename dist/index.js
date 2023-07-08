@@ -11,7 +11,7 @@ var platformExpress = require('@nestjs/platform-express');
 var Route = function Route(routebase, cdnconfig) {
   return function (target) {
     var routecdnconfig = {
-      bunnycdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnycdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnysecure) || false,
+      bunnycdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnycdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || !!(cdnconfig !== null && cdnconfig !== void 0 && cdnconfig.bunnysecure) || false,
       bunnyperma: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || false,
       bunnysecure: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnysecure) || false
     };
