@@ -35,12 +35,12 @@ const getNextReferenceTime = (exp: string) => {
 
 const createBunnySignature = (info: RouteInfo, variables: AnyObject) => {
   const tokenroute = info.cdnconfig.secureroute!.tokenroute
-  const exp = info.cdnconfig.bunnysecure!
+  const exp = info.cdnconfig.bunnysecure || '30d'
   const access = ${cdnaccess}
   const expires = Math.ceil(getNextReferenceTime(exp) / 1000)
   const path = tokenroute.replace(/\\:(\\w+)/g, (_, k) => encodeURIComponent(variables[k]))
   const tokenbasics = access + path + expires
-  const token = Buffer.from(sha256(tokenbasics).toString(), 'hex').toString('base64url')
+  const token = Buffer.from(sha(tokenbasics).toString(), 'hex').toString('base64url')
   return { token, token_path: path, expires }
 }
 
