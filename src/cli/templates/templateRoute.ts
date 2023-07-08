@@ -6,17 +6,18 @@ import { Selects } from '../../Route/RouteField/accessories/RouteFieldTypes'
 const selectUnion = (selects: Selects) => selects.map(s => (isString(s) ? `'${s}'` : s)).join('|')
 
 export const templateRoute = (routeinfo: RouteInfo) => {
+  const { routesecure, cdnconfig: cdn, params, queries, files, bodies, results: r } = routeinfo
   const name = routeinfo.name.replace(/Route$/, '')
-  let vartypes = loopableType(routeinfo.bodies)
-  if (routeinfo.routesecure) vartypes += `${routeinfo.routesecure.name}:string;`
-  const pqfs = [...routeinfo.params, ...routeinfo.queries, ...routeinfo.files]
+  let vartypes = loopableType(bodies)
+  if (routesecure) vartypes += `${routesecure.name}:string;`
+  if (cdn.bunnysecure) vartypes += `bunnytoken:{token:string;token_path:string;expires:number};`
+  const pqfs = [...params, ...queries, ...files]
   pqfs.forEach(({ type, name, optional, selects }) => {
     const vtype = type === 'file' ? 'File' : type === 'file[]' ? 'File[]' : type
     const ttype = selects ? selectUnion(selects) : `${vtype}${optional ? ' | null' : ''}`
     vartypes += `${name}${optional ? '?' : ''}:${ttype};`
   })
 
-  const r = routeinfo.results
   const istype = r === 'Buffer' || r === 'String'
   const res = r === 'Buffer' ? 'ArrayBuffer' : r === 'String' ? 'string' : loopableType(r)
 
@@ -28,9 +29,9 @@ export const url${name} = (variables: Route${name}Variables) => createUrl(info${
 export const axios${name} = (props: AxiosRequestProps<Route${name}Variables, Route${name}Result>) => createAxiosRequest(info${name}, props)
 `
 
-  if (routeinfo.cdnconfig.bunnysecure) {
+  if (cdn.bunnysecure) {
     let vartypes = ''
-    routeinfo.cdnconfig.secureroute!.params.forEach(({ name, type, selects }) => {
+    cdn.secureroute!.params.forEach(({ name, type, selects }) => {
       const ttype = selects ? selectUnion(selects) : type
       vartypes += `${name}:${ttype};`
     })

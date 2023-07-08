@@ -71,6 +71,13 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
     else paramobj[rs.name] = token
   }
 
+  if (info.cdnconfig.secureroute) {
+    const { token, token_path, expires } = variables.bunnytoken
+    queryarr.push('token=' + token)
+    queryarr.push('token_path=' + token_path)
+    queryarr.push('expires=' + expires)
+  }
+
   const site = ${site}
   const cdn = ${cdn ? cdn : 'site'}
   const address = (info.cdnconfig.bunnycdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'
