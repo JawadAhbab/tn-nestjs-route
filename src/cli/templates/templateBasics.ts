@@ -21,38 +21,39 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onFinally?: () => void
 }
 
-const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, paramstrs: string[]) => {
+const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, paramarr: string[]) => {
   const { name, timesafe } = rs
   const secret = variables[name]
-  const paramurl = paramstrs.join('/')
+  const paramurl = paramarr.join('/')
 
-  if (timesafe) {
-    const exp = new Date().getTime() + ms(timesafe)
-    const token = exp + '.' + sha(paramurl + exp + secret).toString()
-    return name + '=' + token
-  } else {
-    const token = sha(paramurl + secret).toString()
-    return name + '=' + token
-  }
+  if (!timesafe) return sha(paramurl + secret).toString()
+  const exp = new Date().getTime() + ms(timesafe)
+  return exp + '.' + sha(paramurl + exp + secret).toString()
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
-  const paramstrs: string[] = []
-  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => {
-    const val = variables[k]
+  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
+  const paramobj: AnyObject = {}
+  const paramarr = info.params.map(({ name }) => {
+    const val = variables[name]
     const isnull = val === null || val === undefined
     const value = isnull ? '-' : encodeURIComponent(val)
-    paramstrs.push(value)
+    paramobj[name] = value
     return value
-  }).replace(/^[\\\\\\/]/, '')
+  })
 
-  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
-  if (info.routesecure) queryarr.push(getRouteSecureToken(info.routesecure, variables, paramstrs))
-  const queries = queryarr.join('&')
+  if (info.routesecure) {
+    const rs = info.routesecure
+    const token = getRouteSecureToken(rs, variables, paramarr)
+    if (rs.query) queryarr.push(rs.name + '=' + token)
+    else paramobj[rs.name] = token
+  }
 
   const site = ${site}
   const cdn = ${cdn ? cdn : 'site'}
   const address = (info.cdnconfig.cdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'
+  const queries = queryarr.join('&')
+  const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => paramobj[k]).replace(/^[\\\\\\/]/, '')
 
   return address + urlr + (queries ? '?' : '') + queries
 }

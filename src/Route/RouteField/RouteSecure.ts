@@ -1,10 +1,11 @@
 type TimeUnit = 's' | 'm' | 'h' | 'd' | 'y'
-type Options = { timesafe?: `${number}${TimeUnit}` | false }
+type Options = { timesafe?: `${number}${TimeUnit}` | false; query?: boolean }
 export interface RouteSecureInfo {
   $secure: true
   name: string
   secret: string
   timesafe: string | false
+  query: boolean
 }
 
 export const RouteSecure = (secret: string, opts?: Options) => {
@@ -14,6 +15,7 @@ export const RouteSecure = (secret: string, opts?: Options) => {
       name,
       secret,
       timesafe: opts?.timesafe || false,
+      query: opts?.query || false,
     })
     Object.defineProperty(target, name, { get })
   }

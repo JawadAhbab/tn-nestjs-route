@@ -12,7 +12,7 @@ type RouteBodyType = (typeof btypes)[number]
 type RouteResultType = (typeof rtypes)[number]
 type RouteResultInfo = RouteResultJson[] | 'String' | 'Buffer'
 type Selects = string[] | number[] | readonly number[] | readonly string[]
-type RouteSecure = { name: string; timesafe: string | false }
+type RouteSecure = { name: string; timesafe: string | false; query: boolean }
 
 interface RouteInfo {
   $route: true

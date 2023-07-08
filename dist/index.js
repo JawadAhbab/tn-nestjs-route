@@ -235,7 +235,8 @@ var RouteSecure = function RouteSecure(secret, opts) {
         $secure: true,
         name: name,
         secret: secret,
-        timesafe: (opts === null || opts === void 0 ? void 0 : opts.timesafe) || false
+        timesafe: (opts === null || opts === void 0 ? void 0 : opts.timesafe) || false,
+        query: (opts === null || opts === void 0 ? void 0 : opts.query) || false
       };
     };
     Object.defineProperty(target, name, {
@@ -419,7 +420,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
 var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
   var rs = route.routesecure;
   if (!rs) return;
-  var token = query[rs.name];
+  var token = rs.query ? query[rs.name] : params[rs.name];
   if (!token) throw new common.UnauthorizedException();
   var paramurl = route.params.map(function (_ref4) {
     var name = _ref4.name;
@@ -462,12 +463,12 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var bodies = [];
   var files = [];
   var paramnames = [];
-  var routesecure;
+  var rs;
   getAllProperties(routecls).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
     var secure = body;
-    if (secure.$secure) return routesecure = secure;
+    if (secure.$secure) return rs = secure;
     var query = body;
     if (query.$query) return queries.push(query);
     var file = body;
@@ -490,16 +491,19 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   var base = routecls.prototype.$routebase;
   if (cdnconfig.secure) base = '/-secure-/' + base;
   if (cdnconfig.perma) base = '/-perma-/' + base;
+  var routearr = [base].concat(_toConsumableArray(paramnames.map(function (n) {
+    return ":".concat(n);
+  })));
+  if (rs && !rs.query) routearr.push(":".concat(rs.name));
   return {
     $route: true,
-    route: [base].concat(_toConsumableArray(paramnames.map(function (n) {
-      return ":".concat(n);
-    }))).join('/').replace(/[\\\/]+/g, '/'),
+    route: routearr.join('/').replace(/[\\\/]+/g, '/'),
     method: method,
     name: routecls.name,
-    routesecure: !routesecure ? false : {
-      name: routesecure.name,
-      timesafe: routesecure.timesafe
+    routesecure: !rs ? false : {
+      name: rs.name,
+      timesafe: rs.timesafe,
+      query: rs.query
     },
     cdnconfig: cdnconfig,
     queries: queries,
@@ -508,8 +512,8 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     files: files,
     results: results,
     getRouteSecureSecret: function getRouteSecureSecret() {
-      var _routesecure;
-      return (_routesecure = routesecure) === null || _routesecure === void 0 ? void 0 : _routesecure.secret;
+      var _rs;
+      return (_rs = rs) === null || _rs === void 0 ? void 0 : _rs.secret;
     }
   };
 };

@@ -9,6 +9,7 @@ export type RouteMethod = 'GET' | 'POST';
 type RouteSecure = {
     name: string;
     timesafe: string | false;
+    query: boolean;
 };
 export interface RouteInfo {
     $route: true;

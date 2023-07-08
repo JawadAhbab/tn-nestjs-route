@@ -8,7 +8,7 @@ export const routeFieldsSecure = (query: AnyObject, params: AnyObject, route: Ro
   const rs = route.routesecure
   if (!rs) return
 
-  const token = query[rs.name] as string
+  const token: string = rs.query ? query[rs.name] : params[rs.name]
   if (!token) throw new UnauthorizedException()
 
   const paramurl = route.params.map(({ name }) => params[name]).join('/')
