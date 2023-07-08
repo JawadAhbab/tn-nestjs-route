@@ -37,9 +37,8 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const paramarr = info.params.map(({ name }) => {
     const val = variables[name]
     const isnull = val === null || val === undefined
-    const value = isnull ? '-' : encodeURIComponent(val)
-    paramobj[name] = value
-    return value
+    paramobj[name] = isnull ? '-' : encodeURIComponent(val)
+    return isnull ? '-' : val
   })
 
   if (info.routesecure) {
