@@ -530,6 +530,11 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     if (!tnValidate.isArray(target.$routes)) target.$routes = [];
     target.$routes.push(routeinfo);
   };
+  if (routeinfo.cdnconfig.bunnysecure) {
+    var rs = routeinfo.routesecure;
+    if (rs && rs.query) throw new Error("@RouteSecure() query:true not allowed when bunnysecure\n");
+    if (routeinfo.queries.length) throw new Error("@RouteQuery() not allowed when bunnysecure");
+  }
   var Method = method === 'GET' ? common.Get : common.Post;
   var decors = [routeDecor, Method(route)];
   if (routeinfo.files.length) {

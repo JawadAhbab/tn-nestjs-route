@@ -17,6 +17,12 @@ const createDecor = (method: RouteMethod, routecls: Function, resultcls?: Result
     target.$routes.push(routeinfo)
   }
 
+  if (routeinfo.cdnconfig.bunnysecure) {
+    const rs = routeinfo.routesecure
+    if (rs && rs.query) throw new Error(`@RouteSecure() query:true not allowed when bunnysecure\n`)
+    if (routeinfo.queries.length) throw new Error(`@RouteQuery() not allowed when bunnysecure`)
+  }
+
   const Method = method === 'GET' ? Get : Post
   const decors = [routeDecor, Method(route)]
   if (routeinfo.files.length) {
