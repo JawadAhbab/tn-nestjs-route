@@ -1,6 +1,6 @@
 export interface RouteCdnConfig {
-    cdn?: boolean;
-    perma?: boolean;
-    secure?: boolean;
+    bunnycdn?: boolean;
+    bunnyperma?: boolean;
+    bunnysecure?: boolean;
 }
 export declare const Route: (routebase: string, cdnconfig?: RouteCdnConfig) => (target: Function) => void;

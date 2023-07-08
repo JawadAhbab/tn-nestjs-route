@@ -1,16 +1,16 @@
 import { OptionLess } from 'tn-typescript'
 export interface RouteCdnConfig {
-  cdn?: boolean
-  perma?: boolean
-  secure?: boolean
+  bunnycdn?: boolean
+  bunnyperma?: boolean
+  bunnysecure?: boolean
 }
 
 export const Route = (routebase: string, cdnconfig?: RouteCdnConfig) => {
   return (target: Function) => {
     const routecdnconfig: OptionLess<RouteCdnConfig> = {
-      cdn: cdnconfig?.cdn || cdnconfig?.perma || cdnconfig?.secure || false,
-      perma: cdnconfig?.perma || false,
-      secure: cdnconfig?.secure || false,
+      bunnycdn: cdnconfig?.bunnycdn || cdnconfig?.bunnyperma || cdnconfig?.bunnysecure || false,
+      bunnyperma: cdnconfig?.bunnyperma || false,
+      bunnysecure: cdnconfig?.bunnysecure || false,
     }
 
     target.prototype.$routebase = routebase

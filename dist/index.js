@@ -11,9 +11,9 @@ var platformExpress = require('@nestjs/platform-express');
 var Route = function Route(routebase, cdnconfig) {
   return function (target) {
     var routecdnconfig = {
-      cdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.cdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.perma) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.secure) || false,
-      perma: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.perma) || false,
-      secure: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.secure) || false
+      bunnycdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnycdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnysecure) || false,
+      bunnyperma: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || false,
+      bunnysecure: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnysecure) || false
     };
     target.prototype.$routebase = routebase;
     target.prototype.$routecdnconfig = routecdnconfig;
@@ -489,8 +489,8 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
   }
   var cdnconfig = routecls.prototype.$routecdnconfig;
   var base = routecls.prototype.$routebase;
-  if (cdnconfig.secure) base = '/-secure-/' + base;
-  if (cdnconfig.perma) base = '/-perma-/' + base;
+  if (cdnconfig.bunnysecure) base = '/-secure-/' + base;
+  if (cdnconfig.bunnyperma) base = '/-perma-/' + base;
   var routearr = [base].concat(_toConsumableArray(paramnames.map(function (n) {
     return ":".concat(n);
   })));

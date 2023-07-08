@@ -50,7 +50,7 @@ const createUrl = (info: RouteInfo, variables: AnyObject) => {
 
   const site = ${site}
   const cdn = ${cdn ? cdn : 'site'}
-  const address = (info.cdnconfig.cdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'
+  const address = (info.cdnconfig.bunnycdn ? cdn : site).replace(/[\\\\\\/]$/, '') + '/'
   const queries = queryarr.join('&')
   const urlr = info.route.replace(/\\:(\\w+)/g, (_, k) => paramobj[k]).replace(/^[\\\\\\/]/, '')
 

@@ -29,9 +29,9 @@ interface RouteInfo {
 }
 
 interface RouteCdnConfig {
-  cdn: boolean
-  perma: boolean
-  secure: boolean
+  bunnycdn: boolean
+  bunnyperma: boolean
+  bunnysecure: boolean
 }
 
 interface RouteQueryInfo {

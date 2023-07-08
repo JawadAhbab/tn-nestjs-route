@@ -71,8 +71,8 @@ export const createRouteInfo = (
 
   const cdnconfig = routecls.prototype.$routecdnconfig as OptionLess<RouteCdnConfig>
   let base = routecls.prototype.$routebase
-  if (cdnconfig.secure) base = '/-secure-/' + base
-  if (cdnconfig.perma) base = '/-perma-/' + base
+  if (cdnconfig.bunnysecure) base = '/-secure-/' + base
+  if (cdnconfig.bunnyperma) base = '/-perma-/' + base
 
   const routearr = [base, ...paramnames.map(n => `:${n}`)]
   if (rs && !rs.query) routearr.push(`:${rs.name}`)
