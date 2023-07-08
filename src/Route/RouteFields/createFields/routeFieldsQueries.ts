@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 import { AnyObject } from 'tn-typescript'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 const queryerr = (name: string) => new BadRequestException(`Invalid query: ${name}`)
 
 export const routeFieldsQueries = (fields: AnyObject, query: AnyObject, route: RouteInfo) => {

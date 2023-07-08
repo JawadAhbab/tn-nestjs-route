@@ -1,5 +1,6 @@
 'use strict';
 
+var _objectSpread = require("@babel/runtime/helpers/objectSpread2");
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var tnValidate = require('tn-validate');
@@ -8,15 +9,15 @@ var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
 var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
-var Route = function Route(routebase, cdnconfig) {
+var Route = function Route(routebase, cdnopts) {
   return function (target) {
-    var routecdnconfig = {
-      bunnycdn: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnycdn) || (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || !!(cdnconfig !== null && cdnconfig !== void 0 && cdnconfig.bunnysecure) || false,
-      bunnyperma: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnyperma) || false,
-      bunnysecure: (cdnconfig === null || cdnconfig === void 0 ? void 0 : cdnconfig.bunnysecure) || false
+    var routecdnopts = {
+      bunnycdn: (cdnopts === null || cdnopts === void 0 ? void 0 : cdnopts.bunnycdn) || (cdnopts === null || cdnopts === void 0 ? void 0 : cdnopts.bunnyperma) || !!(cdnopts !== null && cdnopts !== void 0 && cdnopts.bunnysecure) || false,
+      bunnyperma: (cdnopts === null || cdnopts === void 0 ? void 0 : cdnopts.bunnyperma) || false,
+      bunnysecure: (cdnopts === null || cdnopts === void 0 ? void 0 : cdnopts.bunnysecure) || false
     };
     target.prototype.$routebase = routebase;
-    target.prototype.$routecdnconfig = routecdnconfig;
+    target.prototype.$routecdnopts = routecdnopts;
   };
 };
 var getAllProperties = function getAllProperties(cls) {
@@ -123,6 +124,7 @@ var RouteParam = function RouteParam(opts, v) {
         type: type,
         optional: optional,
         selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
+        bunnysecure: (opts === null || opts === void 0 ? void 0 : opts.bunnysecure) || false,
         validator: validator,
         getter: getter
       };
@@ -153,6 +155,7 @@ var RouteIndexParam = function RouteIndexParam(index, opts, v) {
         type: type,
         optional: optional,
         selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
+        bunnysecure: (opts === null || opts === void 0 ? void 0 : opts.bunnysecure) || false,
         validator: validator,
         getter: getter
       };
@@ -456,19 +459,51 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
   routeFieldsFiles(fields, files, route);
   return fields;
 });
-var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
+var routeInfoCdnConfig = function routeInfoCdnConfig(routecls, params) {
+  var cdnopts = routecls.prototype.$routecdnopts;
+  var routebase = routecls.prototype.$routebase;
+  if (cdnopts.bunnysecure) routebase = '/-secure-/' + routebase;
+  if (cdnopts.bunnyperma) routebase = '/-perma-/' + routebase;
+  var secureroute;
+  if (cdnopts.bunnysecure) {
+    var lock = false;
+    var tokenparams = [];
+    params.forEach(function (param) {
+      if (!param.bunnysecure) return lock = true;
+      if (lock) throw new Error('@RouteParam() bunnysecure:true must be in proper sequence\n');
+      if (param.optional) throw new Error('@RouteParam() bunnysecure:true can not be optional\n');
+      tokenparams.push(param);
+    });
+    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref5) {
+      var name = _ref5.name;
+      return ":".concat(name);
+    }))).join('/');
+    var tokenroute = "/".concat(routearr, "/").replace(/[\\\/]+/g, '/');
+    secureroute = {
+      tokenroute: tokenroute,
+      params: tokenparams
+    };
+  }
+  var cdnconfig = _objectSpread(_objectSpread({}, cdnopts), {}, {
+    secureroute: secureroute
+  });
+  return {
+    routebase: routebase,
+    cdnconfig: cdnconfig
+  };
+};
+var routeInfoFields = function routeInfoFields(routecls) {
   var paramsUnindexed = [];
   var paramsIndexed = [];
+  var files = [];
   var queries = [];
   var bodies = [];
-  var files = [];
-  var paramnames = [];
-  var rs;
+  var rsi;
   getAllProperties(routecls).forEach(function (p) {
     var body = routecls.prototype[p];
     if (body.$body) return bodies.push(body);
     var secure = body;
-    if (secure.$secure) return rs = secure;
+    if (secure.$secure) return rsi = secure;
     var query = body;
     if (query.$query) return queries.push(query);
     var file = body;
@@ -476,8 +511,17 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     var param = body;
     if (!param.$param) return;
     if (param.index) paramsIndexed.splice(param.index, 0, param);else paramsUnindexed.push(param);
-    paramnames.push(p);
   });
+  var params = [].concat(paramsUnindexed, paramsIndexed);
+  return {
+    params: params,
+    files: files,
+    queries: queries,
+    bodies: bodies,
+    rsi: rsi
+  };
+};
+var routeInfoResults = function routeInfoResults(resultcls) {
   var results = 'String';
   if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'String') results = 'String';else if ((resultcls === null || resultcls === void 0 ? void 0 : resultcls.name) === 'Buffer') results = 'Buffer';else if (resultcls) {
     var resjson = [];
@@ -487,33 +531,59 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     });
     results = resjson;
   }
-  var cdnconfig = routecls.prototype.$routecdnconfig;
-  var base = routecls.prototype.$routebase;
-  if (cdnconfig.bunnysecure) base = '/-secure-/' + base;
-  if (cdnconfig.bunnyperma) base = '/-perma-/' + base;
-  var routearr = [base].concat(_toConsumableArray(paramnames.map(function (n) {
-    return ":".concat(n);
+  return results;
+};
+var routeInfoRoute = function routeInfoRoute(_ref6) {
+  var routebase = _ref6.routebase,
+    params = _ref6.params,
+    rsi = _ref6.rsi;
+  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref7) {
+    var name = _ref7.name;
+    return ":".concat(name);
   })));
-  if (rs && !rs.query) routearr.push(":".concat(rs.name));
+  if (rsi && !rsi.query) routearr.push(":".concat(rsi.name));
+  return routearr.join('/').replace(/[\\\/]+/g, '/');
+};
+var routeInfoRouteSecure = function routeInfoRouteSecure(rsi) {
+  if (!rsi) return false;
+  return {
+    name: rsi.name,
+    timesafe: rsi.timesafe,
+    query: rsi.query
+  };
+};
+var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
+  var _routeInfoFields = routeInfoFields(routecls),
+    params = _routeInfoFields.params,
+    queries = _routeInfoFields.queries,
+    bodies = _routeInfoFields.bodies,
+    files = _routeInfoFields.files,
+    rsi = _routeInfoFields.rsi;
+  var _routeInfoCdnConfig = routeInfoCdnConfig(routecls, params),
+    routebase = _routeInfoCdnConfig.routebase,
+    cdnconfig = _routeInfoCdnConfig.cdnconfig;
+  var results = routeInfoResults(resultcls);
+  var route = routeInfoRoute({
+    routebase: routebase,
+    params: params,
+    rsi: rsi
+  });
+  var routesecure = routeInfoRouteSecure(rsi);
+  var name = routecls.name;
   return {
     $route: true,
-    route: routearr.join('/').replace(/[\\\/]+/g, '/'),
+    route: route,
     method: method,
-    name: routecls.name,
-    routesecure: !rs ? false : {
-      name: rs.name,
-      timesafe: rs.timesafe,
-      query: rs.query
-    },
+    name: name,
+    routesecure: routesecure,
     cdnconfig: cdnconfig,
     queries: queries,
-    params: [].concat(paramsUnindexed, paramsIndexed),
+    params: params,
     bodies: bodies,
     files: files,
     results: results,
     getRouteSecureSecret: function getRouteSecureSecret() {
-      var _rs;
-      return (_rs = rs) === null || _rs === void 0 ? void 0 : _rs.secret;
+      return rsi === null || rsi === void 0 ? void 0 : rsi.secret;
     }
   };
 };
@@ -545,9 +615,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref5) {
-      var type = _ref5.type,
-        name = _ref5.name;
+    routeinfo.bodies.forEach(function (_ref8) {
+      var type = _ref8.type,
+        name = _ref8.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });

@@ -1,7 +1,7 @@
 import { ExecutionContext, InternalServerErrorException } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { Request } from 'express'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 import { isArray } from 'tn-validate'
 import { ObjectOf } from 'tn-typescript'
 type Files = ObjectOf<Express.Multer.File[]>

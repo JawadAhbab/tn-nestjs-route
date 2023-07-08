@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common'
 import { AnyObject, ObjectOf } from 'tn-typescript'
 import { RouteFileInfoValidators } from '../../RouteField/RouteFile'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 type Files = ObjectOf<Express.Multer.File[]>
 const fileerr = (name: string) => new BadRequestException(`Invalid file: ${name}`)
 const validate = (file: Express.Multer.File, validators: RouteFileInfoValidators) => {

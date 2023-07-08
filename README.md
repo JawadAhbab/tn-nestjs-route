@@ -61,6 +61,7 @@ export class RoutesController {
   {
     "site": "process.env.SITE",
     "cdn": "process.env.SITE_CDN",
+    "cdnaccess": "process.env.SITE_CDN_ACCESS",
     "schema": "http://localhost:0000/routes",
     "outpath": "...",
     "loggerImport": "./logger",

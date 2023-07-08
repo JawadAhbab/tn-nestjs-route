@@ -8,6 +8,7 @@ export interface RouteParamInfo {
   type: ParamType
   optional: boolean
   selects: Selects | null
+  bunnysecure: boolean
   getter: Getter
   validator: Validator
 }
@@ -15,6 +16,7 @@ interface Options {
   getter?: Getter
   optional?: boolean
   selects?: Selects
+  bunnysecure?: boolean
   type?: StringConstructor | NumberConstructor | BooleanConstructor
 }
 
@@ -32,6 +34,7 @@ export const RouteParam = <V>(opts?: Options, v?: Validator<V>) => {
       type,
       optional,
       selects: opts?.selects || null,
+      bunnysecure: opts?.bunnysecure || false,
       validator,
       getter,
     })
@@ -55,6 +58,7 @@ export const RouteIndexParam = <V>(index: number, opts?: Options, v?: Validator<
       type,
       optional,
       selects: opts?.selects || null,
+      bunnysecure: opts?.bunnysecure || false,
       validator,
       getter,
     })

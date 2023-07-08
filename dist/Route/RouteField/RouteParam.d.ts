@@ -8,6 +8,7 @@ export interface RouteParamInfo {
     type: ParamType;
     optional: boolean;
     selects: Selects | null;
+    bunnysecure: boolean;
     getter: Getter;
     validator: Validator;
 }
@@ -15,6 +16,7 @@ interface Options {
     getter?: Getter;
     optional?: boolean;
     selects?: Selects;
+    bunnysecure?: boolean;
     type?: StringConstructor | NumberConstructor | BooleanConstructor;
 }
 export declare const RouteParam: <V>(opts?: Options, v?: Validator<V> | undefined) => (target: any, name: string) => void;

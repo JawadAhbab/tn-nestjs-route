@@ -32,6 +32,10 @@ interface RouteCdnConfig {
   bunnycdn: boolean
   bunnyperma: boolean
   bunnysecure: false | string
+  secureroute?: {
+    tokenroute: string
+    params: RouteParamInfo[]
+  }
 }
 
 interface RouteQueryInfo {
@@ -47,6 +51,7 @@ interface RouteParamInfo {
   index?: number
   name: string
   type: ParamType
+  bunnysecure: boolean
   selects: Selects | null
   optional: boolean
 }

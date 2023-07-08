@@ -2,7 +2,7 @@ import { BadRequestException } from '@nestjs/common'
 import { AnyObject } from 'tn-typescript'
 import { isArray, isBoolArr, isBoolean, isNumArr, isNumber, isObject, isStrArr, isString } from 'tn-validate'; // prettier-ignore
 import { RouteBodyInfo } from '../../RouteField/RouteBody'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 const bodyerr = (name: string, prefix: string[] = []) => {
   const prestr = prefix.map(p => `${p}.`).join('')
   return new BadRequestException(`Invalid body: ${prestr}${name}`)

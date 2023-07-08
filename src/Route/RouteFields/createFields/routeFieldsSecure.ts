@@ -2,7 +2,7 @@ import { UnauthorizedException } from '@nestjs/common'
 import sha from 'crypto-js/sha256'
 import ms from 'ms'
 import { AnyObject } from 'tn-typescript'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 
 export const routeFieldsSecure = (query: AnyObject, params: AnyObject, route: RouteInfo) => {
   const rs = route.routesecure

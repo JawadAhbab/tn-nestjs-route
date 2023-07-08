@@ -1,7 +1,7 @@
 import { TimeString } from './accessories/TimeString';
-export interface RouteCdnConfig {
+export interface RouteCdnOptions {
     bunnycdn?: boolean;
     bunnyperma?: boolean;
     bunnysecure?: false | TimeString;
 }
-export declare const Route: (routebase: string, cdnconfig?: RouteCdnConfig) => (target: Function) => void;
+export declare const Route: (routebase: string, cdnopts?: RouteCdnOptions) => (target: Function) => void;

@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common'
 import { AnyObject } from 'tn-typescript'
-import { RouteInfo } from '../../RouteInfo'
+import { RouteInfo } from '../../RouteInfo/RouteInfo'
 const paramerr = (name: string) => new BadRequestException(`Invalid parameter: ${name}`)
 
 export const routeFieldsParams = (fields: AnyObject, params: AnyObject, route: RouteInfo) => {

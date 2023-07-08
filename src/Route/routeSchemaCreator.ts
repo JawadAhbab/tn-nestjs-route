@@ -1,5 +1,5 @@
 import { isArray } from 'tn-validate'
-import { RouteInfo } from './RouteInfo'
+import { RouteInfo } from './RouteInfo/RouteInfo'
 
 export const routeSchemaCreator = (controllers: Function[]) => {
   return controllers

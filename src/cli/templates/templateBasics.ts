@@ -1,6 +1,12 @@
-type Props = { site: string; cdn?: string; loggerImport?: string; loggerMethod?: string }
+interface Props {
+  site: string
+  cdn?: string
+  cdnaccess?: string
+  loggerImport?: string
+  loggerMethod?: string
+}
 
-export const templateBasics = ({ site, cdn, loggerImport, loggerMethod }: Props) => {
+export const templateBasics = ({ site, cdn, cdnaccess, loggerImport, loggerMethod }: Props) => {
   const logger = loggerImport && loggerMethod
   return `
 import axios, { AxiosError, AxiosProgressEvent, AxiosRequestConfig, AxiosResponse, ResponseType } from 'axios' // prettier-ignore
@@ -19,6 +25,23 @@ interface AxiosRequestProps<V = AnyObject, R = any> {
   onSuccess?: (data: R, res: AxiosResponse<R>) => void
   onError?: (err: AxiosError) => void
   onFinally?: () => void
+}
+
+const getNextReferenceTime = (exp: string) => {
+  const starting = new Date().getTime()
+  const validity = ms(exp)
+  return new Date(Math.ceil((starting + validity) / validity) * validity).getTime()
+}
+
+const createBunnySignature = (info: RouteInfo, variables: AnyObject) => {
+  const tokenroute = info.cdnconfig.secureroute!.tokenroute
+  const exp = info.cdnconfig.bunnysecure!
+  const access = ${cdnaccess}
+  const expires = Math.ceil(getNextReferenceTime(exp) / 1000)
+  const path = tokenroute.replace(/\\:(\\w+)/g, (_, k) => encodeURIComponent(variables[k]))
+  const tokenbasics = access + path + expires
+  const token = Buffer.from(sha256(tokenbasics).toString(), 'hex').toString('base64url')
+  return { token, token_path: path, expires }
 }
 
 const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, paramarr: string[]) => {
