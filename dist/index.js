@@ -14,6 +14,8 @@ var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
 var ms$1 = require('ms');
 var platformExpress = require('@nestjs/platform-express');
+
+// TODO remove all ms() when visual status page is ready
 var Status = /*#__PURE__*/function () {
   function Status(route) {
     _classCallCheck(this, Status);
@@ -22,18 +24,21 @@ var Status = /*#__PURE__*/function () {
     _defineProperty(this, "cputime", 0);
     _defineProperty(this, "maxtime", 0);
     _defineProperty(this, "mintime", Infinity);
+    _defineProperty(this, "statusCodes", {});
     this.route = route;
   }
   _createClass(Status, [{
     key: "saveStatus",
-    value: function saveStatus(time) {
+    value: function saveStatus(time, statusCode) {
       this.count += 1;
       this.cputime += time;
       this.mintime = Math.min(this.mintime, time);
       this.maxtime = Math.max(this.maxtime, time);
+      if (!this.statusCodes[statusCode]) this.statusCodes[statusCode] = 0;
+      this.statusCodes[statusCode] += 1;
     }
   }, {
-    key: "ave",
+    key: "average",
     get: function get() {
       return Math.round(this.cputime / this.count);
     }
@@ -42,11 +47,14 @@ var Status = /*#__PURE__*/function () {
     get: function get() {
       return {
         count: this.count,
-        time: "".concat(this.mintime, "ms - ").concat(this.ave, "ms - ").concat(this.maxtime, "ms"),
+        mintime: this.mintime + 'ms',
+        average: this.average + 'ms',
+        maxtime: this.maxtime + 'ms',
         cputime: ms(this.cputime, {
           verbose: true,
           secondsDecimalDigits: 0
-        })
+        }),
+        statusCodes: this.statusCodes
       };
     }
   }]);
@@ -59,27 +67,19 @@ var RouteStatus = /*#__PURE__*/function () {
   }
   _createClass(RouteStatus, [{
     key: "saveStatus",
-    value: function saveStatus(routename, time) {
+    value: function saveStatus(routename, time, statusCode) {
       var route = this.routes[routename];
       if (!route) this.routes[routename] = new Status(routename);
-      this.routes[routename].saveStatus(time);
+      this.routes[routename].saveStatus(time, statusCode);
     }
   }, {
     key: "createSummery",
     value: function createSummery() {
-      var sort = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'count';
       var rs = Object.entries(this.routes).map(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
           _ = _ref2[0],
           route = _ref2[1];
         return route;
-      });
-      if (sort === 'count') rs.sort(function (a, b) {
-        return b.count - a.count;
-      });else if (sort === 'ave') rs.sort(function (a, b) {
-        return b.ave - a.ave;
-      });else if (sort === 'cpu') rs.sort(function (a, b) {
-        return b.cputime - a.cputime;
       });
       var counts = rs.reduce(function (a, b) {
         return a + b.count;
@@ -118,7 +118,8 @@ var routeStatusMiddleware = function routeStatusMiddleware() {
       var etime = new Date().getTime();
       var time = etime - stime;
       var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
-      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time);
+      var statusCode = res.statusCode;
+      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time, statusCode);
     });
     next();
   };

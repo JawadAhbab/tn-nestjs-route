@@ -14,7 +14,8 @@ export const routeStatusMiddleware = (opts: Options = {}): RequestHandler => {
       const etime = new Date().getTime()
       const time = etime - stime
       const routename = req.route?.path || 'unknown'
-      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time)
+      const statusCode = res.statusCode
+      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time, statusCode)
     })
     next()
   }

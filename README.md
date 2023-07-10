@@ -80,4 +80,5 @@ export class RoutesController {
 
 ```ts
 app.use(routeStatusMiddleware())
+routeStatus.createSummery(sort)
 ```
