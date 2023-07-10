@@ -26,7 +26,7 @@ class Status {
     return {
       count: this.count,
       time: `${this.mintime}ms - ${this.ave}ms - ${this.maxtime}ms`,
-      cputime: ms(this.cputime),
+      cputime: ms(this.cputime, { verbose: true, secondsDecimalDigits: 0 }),
     }
   }
 }
@@ -47,12 +47,13 @@ export class RouteStatus {
     else if (sort === 'cpu') rs.sort((a, b) => b.cputime - a.cputime)
 
     const counts = rs.reduce((a, b) => a + b.count, 0)
-    const cputime = rs.reduce((a, b) => a + b.cputime, 0)
-    const average = Math.round(cputime / counts)
+    const cputimes = rs.reduce((a, b) => a + b.cputime, 0)
+    const cputime = ms(cputimes, { verbose: true, secondsDecimalDigits: 0 })
+    const average = Math.round(cputimes / counts)
     const routes: AnyObject = {}
     rs.forEach(route => (routes[route.route] = route.summery))
 
-    return { counts, average, cputime: ms(cputime), routes }
+    return { counts, average, cputime, routes }
   }
 }
 

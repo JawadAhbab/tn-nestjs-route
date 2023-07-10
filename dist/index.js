@@ -43,7 +43,10 @@ var Status = /*#__PURE__*/function () {
       return {
         count: this.count,
         time: "".concat(this.mintime, "ms - ").concat(this.ave, "ms - ").concat(this.maxtime, "ms"),
-        cputime: ms(this.cputime)
+        cputime: ms(this.cputime, {
+          verbose: true,
+          secondsDecimalDigits: 0
+        })
       };
     }
   }]);
@@ -81,10 +84,14 @@ var RouteStatus = /*#__PURE__*/function () {
       var counts = rs.reduce(function (a, b) {
         return a + b.count;
       }, 0);
-      var cputime = rs.reduce(function (a, b) {
+      var cputimes = rs.reduce(function (a, b) {
         return a + b.cputime;
       }, 0);
-      var average = Math.round(cputime / counts);
+      var cputime = ms(cputimes, {
+        verbose: true,
+        secondsDecimalDigits: 0
+      });
+      var average = Math.round(cputimes / counts);
       var routes = {};
       rs.forEach(function (route) {
         return routes[route.route] = route.summery;
@@ -92,7 +99,7 @@ var RouteStatus = /*#__PURE__*/function () {
       return {
         counts: counts,
         average: average,
-        cputime: ms(cputime),
+        cputime: cputime,
         routes: routes
       };
     }
