@@ -4,6 +4,7 @@ import { MulterField } from '@nestjs/platform-express/multer/interfaces/multer-o
 import { isArray } from 'tn-validate'
 import { RouteBodyType } from './RouteField/RouteBody'
 import { RouteMethod, createRouteInfo } from './RouteInfo/RouteInfo'
+import { RouteSecureGuard } from './RouteSecureGuard/RouteSecureGuard'
 type ResultClass = Function | BufferConstructor | StringConstructor
 
 export const RouteGet = (routecls: Function, resultcls?: ResultClass) => createDecor('GET', routecls, resultcls) // prettier-ignore
@@ -11,20 +12,16 @@ export const RoutePost = (routecls: Function, resultcls?: ResultClass) => create
 
 const createDecor = (method: RouteMethod, routecls: Function, resultcls?: ResultClass) => {
   const routeinfo = createRouteInfo(method, routecls, resultcls)
-  const route = routeinfo.route
-  const routeDecor = (target: any) => {
+  const decors: MethodDecorator[] = []
+
+  decors.push((target: any) => {
     if (!isArray(target.$routes)) target.$routes = []
     target.$routes.push(routeinfo)
-  }
-
-  if (routeinfo.cdnconfig.bunnysecure) {
-    const rs = routeinfo.routesecure
-    if (rs && rs.query) throw new Error(`@RouteSecure() query:true not allowed when bunnysecure\n`)
-    if (routeinfo.queries.length) throw new Error(`@RouteQuery() not allowed when bunnysecure`)
-  }
+  })
 
   const Method = method === 'GET' ? Get : Post
-  const decors = [routeDecor, Method(route)]
+  decors.push(Method(routeinfo.route))
+
   if (routeinfo.files.length) {
     const multer: MulterField[] = routeinfo.files.map(file => ({ name: file.name }))
     decors.push(UseInterceptors(FileFieldsInterceptor(multer)))
@@ -33,6 +30,14 @@ const createDecor = (method: RouteMethod, routecls: Function, resultcls?: Result
       if (acc.includes(type)) return
       throw new Error(`You are using @RouteFile() so @RouteBody(${name}) must be typeof ${acc}\n`)
     })
+  }
+
+  if (routeinfo.routesecure) decors.push(RouteSecureGuard(routeinfo))
+
+  if (routeinfo.cdnconfig.bunnysecure) {
+    const rs = routeinfo.routesecure
+    if (rs && rs.query) throw new Error(`@RouteSecure() query:true not allowed when bunnysecure\n`)
+    if (routeinfo.queries.length) throw new Error(`@RouteQuery() not allowed when bunnysecure`)
   }
 
   return applyDecorators(...decors)

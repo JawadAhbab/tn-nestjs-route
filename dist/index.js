@@ -1,5 +1,6 @@
 'use strict';
 
+var _typeof = require("@babel/runtime/helpers/typeof");
 var _objectSpread = require("@babel/runtime/helpers/objectSpread2");
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
@@ -11,9 +12,9 @@ var onHeaders = require('on-headers');
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
+var platformExpress = require('@nestjs/platform-express');
 var sha = require('crypto-js/sha256');
 var ms$1 = require('ms');
-var platformExpress = require('@nestjs/platform-express');
 
 // TODO remove all ms() when visual status page is ready
 var Status = /*#__PURE__*/function () {
@@ -543,30 +544,6 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
     fields[name] = getter(value);
   });
 };
-var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
-  var rs = route.routesecure;
-  if (!rs) return;
-  var token = rs.query ? query[rs.name] : params[rs.name];
-  if (!token) throw new common.UnauthorizedException();
-  var paramurl = route.params.map(function (_ref6) {
-    var name = _ref6.name;
-    return params[name];
-  }).join('/');
-  var secret = route.getRouteSecureSecret();
-  if (rs.timesafe) {
-    var _token$split = token.split('.'),
-      _token$split2 = _slicedToArray(_token$split, 2),
-      expstr = _token$split2[0],
-      hash = _token$split2[1];
-    var remain = +expstr - new Date().getTime();
-    if (remain <= 0 || remain >= ms$1(rs.timesafe)) throw new common.UnauthorizedException();
-    var hashmatch = sha(paramurl + expstr + secret).toString();
-    if (hash !== hashmatch) throw new common.UnauthorizedException();
-  } else {
-    var _hashmatch = sha(paramurl + secret).toString();
-    if (token !== _hashmatch) throw new common.UnauthorizedException();
-  }
-};
 var RouteFields = common.createParamDecorator(function (_, ctx) {
   var _routeFieldsEssential = routeFieldsEssentials(ctx),
     params = _routeFieldsEssential.params,
@@ -575,7 +552,6 @@ var RouteFields = common.createParamDecorator(function (_, ctx) {
     files = _routeFieldsEssential.files,
     route = _routeFieldsEssential.route;
   var fields = {};
-  routeFieldsSecure(query, params, route);
   routeFieldsParams(fields, params, route);
   routeFieldsQueries(fields, query, route);
   routeFieldsBodies(fields, body, route);
@@ -597,8 +573,8 @@ var routeInfoCdnConfig = function routeInfoCdnConfig(routecls, params) {
       if (param.optional) throw new Error('@RouteParam() bunnysecure:true can not be optional\n');
       tokenparams.push(param);
     });
-    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref7) {
-      var name = _ref7.name;
+    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref6) {
+      var name = _ref6.name;
       return ":".concat(name);
     }))).join('/');
     var tokenroute = "/".concat(routearr, "/").replace(/[\\\/]+/g, '/');
@@ -656,12 +632,12 @@ var routeInfoResults = function routeInfoResults(resultcls) {
   }
   return results;
 };
-var routeInfoRoute = function routeInfoRoute(_ref8) {
-  var routebase = _ref8.routebase,
-    params = _ref8.params,
-    rsi = _ref8.rsi;
-  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref9) {
-    var name = _ref9.name;
+var routeInfoRoute = function routeInfoRoute(_ref7) {
+  var routebase = _ref7.routebase,
+    params = _ref7.params,
+    rsi = _ref7.rsi;
+  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref8) {
+    var name = _ref8.name;
     return ":".concat(name);
   })));
   if (rsi && !rsi.query) routearr.push(":".concat(rsi.name));
@@ -710,6 +686,81 @@ var createRouteInfo = function createRouteInfo(method, routecls, resultcls) {
     }
   };
 };
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+/* global Reflect, Promise */
+
+function __decorate(decorators, target, key, desc) {
+  var c = arguments.length,
+    r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+    d;
+  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+}
+function __metadata(metadataKey, metadataValue) {
+  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
+}
+var routekey = 'routesecure';
+var RouteSecureGuard = function RouteSecureGuard(route) {
+  return common.applyDecorators(common.SetMetadata(routekey, route), common.UseGuards(Activate));
+};
+var Activate = /*#__PURE__*/function () {
+  function Activate(reflector) {
+    _classCallCheck(this, Activate);
+    _defineProperty(this, "reflector", void 0);
+    this.reflector = reflector;
+  }
+  _createClass(Activate, [{
+    key: "canActivate",
+    value: function canActivate(context) {
+      var handles = [context.getHandler(), context.getClass()];
+      var route = this.reflector.getAllAndOverride(routekey, handles);
+      var req = context.switchToHttp().getRequest();
+      var _req$params2 = req.params,
+        params = _req$params2 === void 0 ? {} : _req$params2,
+        _req$query2 = req.query,
+        query = _req$query2 === void 0 ? {} : _req$query2;
+      var rs = route.routesecure;
+      if (!rs) return true;
+      var token = rs.query ? query[rs.name] : params[rs.name];
+      if (!token) throw new common.UnauthorizedException();
+      var paramurl = route.params.map(function (_ref9) {
+        var name = _ref9.name;
+        return params[name];
+      }).join('/');
+      var secret = route.getRouteSecureSecret();
+      if (rs.timesafe) {
+        var _token$split = token.split('.'),
+          _token$split2 = _slicedToArray(_token$split, 2),
+          expstr = _token$split2[0],
+          hash = _token$split2[1];
+        var remain = +expstr - new Date().getTime();
+        if (remain <= 0 || remain >= ms$1(rs.timesafe)) throw new common.UnauthorizedException();
+        var hashmatch = sha(paramurl + expstr + secret).toString();
+        if (hash !== hashmatch) throw new common.UnauthorizedException();
+      } else {
+        var _hashmatch = sha(paramurl + secret).toString();
+        if (token !== _hashmatch) throw new common.UnauthorizedException();
+      }
+      return true;
+    }
+  }]);
+  return Activate;
+}();
+Activate = __decorate([common.Injectable(), __metadata("design:paramtypes", [core.Reflector])], Activate);
 var RouteGet = function RouteGet(routecls, resultcls) {
   return createDecor('GET', routecls, resultcls);
 }; // prettier-ignore
@@ -718,18 +769,13 @@ var RoutePost = function RoutePost(routecls, resultcls) {
 }; // prettier-ignore
 var createDecor = function createDecor(method, routecls, resultcls) {
   var routeinfo = createRouteInfo(method, routecls, resultcls);
-  var route = routeinfo.route;
-  var routeDecor = function routeDecor(target) {
+  var decors = [];
+  decors.push(function (target) {
     if (!tnValidate.isArray(target.$routes)) target.$routes = [];
     target.$routes.push(routeinfo);
-  };
-  if (routeinfo.cdnconfig.bunnysecure) {
-    var rs = routeinfo.routesecure;
-    if (rs && rs.query) throw new Error("@RouteSecure() query:true not allowed when bunnysecure\n");
-    if (routeinfo.queries.length) throw new Error("@RouteQuery() not allowed when bunnysecure");
-  }
+  });
   var Method = method === 'GET' ? common.Get : common.Post;
-  var decors = [routeDecor, Method(route)];
+  decors.push(Method(routeinfo.route));
   if (routeinfo.files.length) {
     var multer = routeinfo.files.map(function (file) {
       return {
@@ -744,6 +790,12 @@ var createDecor = function createDecor(method, routecls, resultcls) {
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
+  }
+  if (routeinfo.routesecure) decors.push(RouteSecureGuard(routeinfo));
+  if (routeinfo.cdnconfig.bunnysecure) {
+    var rs = routeinfo.routesecure;
+    if (rs && rs.query) throw new Error("@RouteSecure() query:true not allowed when bunnysecure\n");
+    if (routeinfo.queries.length) throw new Error("@RouteQuery() not allowed when bunnysecure");
   }
   return common.applyDecorators.apply(common, decors);
 };
