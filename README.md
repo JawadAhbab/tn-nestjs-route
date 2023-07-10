@@ -73,3 +73,11 @@ export class RoutesController {
 ### Generate Routes
 
 `routegen`
+
+## Middlewares
+
+### RouteStatus
+
+```ts
+app.use(routeStatus())
+```

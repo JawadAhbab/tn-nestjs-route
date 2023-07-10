@@ -1,14 +1,100 @@
 'use strict';
 
 var _objectSpread = require("@babel/runtime/helpers/objectSpread2");
-var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
+var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
+var _createClass = require("@babel/runtime/helpers/createClass");
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+var onHeaders = require('on-headers');
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
 var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
+var StatusRoute = /*#__PURE__*/function () {
+  function StatusRoute(route) {
+    _classCallCheck(this, StatusRoute);
+    _defineProperty(this, "route", void 0);
+    _defineProperty(this, "count", 0);
+    _defineProperty(this, "timesum", 0);
+    _defineProperty(this, "mintime", Infinity);
+    _defineProperty(this, "maxtime", 0);
+    this.route = route;
+  }
+  _createClass(StatusRoute, [{
+    key: "saveStatus",
+    value: function saveStatus(time) {
+      this.count += 1;
+      this.timesum += time;
+      this.mintime = Math.min(this.mintime, time);
+      this.maxtime = Math.max(this.maxtime, time);
+    }
+  }, {
+    key: "ave",
+    get: function get() {
+      return Math.round(this.timesum / this.count);
+    }
+  }, {
+    key: "summery",
+    get: function get() {
+      return {
+        count: this.count,
+        ave: this.ave,
+        min: this.mintime,
+        max: this.maxtime
+      };
+    }
+  }]);
+  return StatusRoute;
+}();
+var StatusRoutes = /*#__PURE__*/function () {
+  function StatusRoutes() {
+    _classCallCheck(this, StatusRoutes);
+    _defineProperty(this, "routes", {});
+  }
+  _createClass(StatusRoutes, [{
+    key: "saveStatus",
+    value: function saveStatus(routename, time) {
+      var route = this.routes[routename];
+      if (!route) this.routes[routename] = new StatusRoute(routename);
+      this.routes[routename].saveStatus(time);
+    }
+  }, {
+    key: "createSummery",
+    value: function createSummery() {
+      var sort = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'count';
+      var summery = {};
+      var routes = Object.entries(this.routes).map(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+          _ = _ref2[0],
+          route = _ref2[1];
+        return route;
+      });
+      routes.sort(function (a, b) {
+        return sort === 'count' ? b.count - a.count : b.ave - a.ave;
+      });
+      routes.forEach(function (route) {
+        return summery[route.route] = route.summery;
+      });
+      return summery;
+    }
+  }]);
+  return StatusRoutes;
+}();
+var statusRoutes = new StatusRoutes();
+var routeStatus = function routeStatus(req, res, next) {
+  var stime = new Date().getTime();
+  onHeaders(res, function () {
+    var _req$route;
+    var etime = new Date().getTime();
+    var time = etime - stime;
+    var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
+    statusRoutes.saveStatus(routename, time);
+  });
+  next();
+};
 var Route = function Route(routebase, cdnopts) {
   return function (target) {
     var routecdnopts = {
@@ -349,11 +435,11 @@ var validate = function validate(file, validators) {
   return mimetypes.includes(file.mimetype);
 };
 var routeFieldsFiles = function routeFieldsFiles(fields, files, route) {
-  route.files.forEach(function (_ref) {
-    var name = _ref.name,
-      optional = _ref.optional,
-      type = _ref.type,
-      validators = _ref.validators;
+  route.files.forEach(function (_ref3) {
+    var name = _ref3.name,
+      optional = _ref3.optional,
+      type = _ref3.type,
+      validators = _ref3.validators;
     var multers = files[name];
     if (!optional && !multers) throw fileerr(name);
     if (!multers) return;
@@ -376,13 +462,13 @@ var paramerr = function paramerr(name) {
   return new common.BadRequestException("Invalid parameter: ".concat(name));
 };
 var routeFieldsParams = function routeFieldsParams(fields, params, route) {
-  route.params.forEach(function (_ref2) {
-    var name = _ref2.name,
-      type = _ref2.type,
-      optional = _ref2.optional,
-      selects = _ref2.selects,
-      validator = _ref2.validator,
-      getter = _ref2.getter;
+  route.params.forEach(function (_ref4) {
+    var name = _ref4.name,
+      type = _ref4.type,
+      optional = _ref4.optional,
+      selects = _ref4.selects,
+      validator = _ref4.validator,
+      getter = _ref4.getter;
     var value;
     var strval = params[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -400,13 +486,13 @@ var queryerr = function queryerr(name) {
   return new common.BadRequestException("Invalid query: ".concat(name));
 };
 var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
-  route.queries.forEach(function (_ref3) {
-    var name = _ref3.name,
-      type = _ref3.type,
-      optional = _ref3.optional,
-      selects = _ref3.selects,
-      validator = _ref3.validator,
-      getter = _ref3.getter;
+  route.queries.forEach(function (_ref5) {
+    var name = _ref5.name,
+      type = _ref5.type,
+      optional = _ref5.optional,
+      selects = _ref5.selects,
+      validator = _ref5.validator,
+      getter = _ref5.getter;
     var value;
     var strval = query[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -425,8 +511,8 @@ var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
   if (!rs) return;
   var token = rs.query ? query[rs.name] : params[rs.name];
   if (!token) throw new common.UnauthorizedException();
-  var paramurl = route.params.map(function (_ref4) {
-    var name = _ref4.name;
+  var paramurl = route.params.map(function (_ref6) {
+    var name = _ref6.name;
     return params[name];
   }).join('/');
   var secret = route.getRouteSecureSecret();
@@ -474,8 +560,8 @@ var routeInfoCdnConfig = function routeInfoCdnConfig(routecls, params) {
       if (param.optional) throw new Error('@RouteParam() bunnysecure:true can not be optional\n');
       tokenparams.push(param);
     });
-    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref5) {
-      var name = _ref5.name;
+    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref7) {
+      var name = _ref7.name;
       return ":".concat(name);
     }))).join('/');
     var tokenroute = "/".concat(routearr, "/").replace(/[\\\/]+/g, '/');
@@ -533,12 +619,12 @@ var routeInfoResults = function routeInfoResults(resultcls) {
   }
   return results;
 };
-var routeInfoRoute = function routeInfoRoute(_ref6) {
-  var routebase = _ref6.routebase,
-    params = _ref6.params,
-    rsi = _ref6.rsi;
-  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref7) {
-    var name = _ref7.name;
+var routeInfoRoute = function routeInfoRoute(_ref8) {
+  var routebase = _ref8.routebase,
+    params = _ref8.params,
+    rsi = _ref8.rsi;
+  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref9) {
+    var name = _ref9.name;
     return ":".concat(name);
   })));
   if (rsi && !rsi.query) routearr.push(":".concat(rsi.name));
@@ -615,9 +701,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref8) {
-      var type = _ref8.type,
-        name = _ref8.name;
+    routeinfo.bodies.forEach(function (_ref10) {
+      var type = _ref10.type,
+        name = _ref10.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
@@ -645,5 +731,8 @@ exports.RoutePost = RoutePost;
 exports.RouteQuery = RouteQuery;
 exports.RouteResult = RouteResult;
 exports.RouteSecure = RouteSecure;
+exports.StatusRoutes = StatusRoutes;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;
+exports.routeStatus = routeStatus;
+exports.statusRoutes = statusRoutes;

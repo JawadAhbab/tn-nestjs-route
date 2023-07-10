@@ -1,3 +1,5 @@
+export { StatusRoutes, statusRoutes } from './Middlewares/RouteStatus/StatusRoutes/StatusRoutes'
+export { routeStatus } from './Middlewares/RouteStatus/routeStatus'
 export { Route } from './Route/Route'
 export { RouteBody } from './Route/RouteField/RouteBody'
 export { RouteFile } from './Route/RouteField/RouteFile'
