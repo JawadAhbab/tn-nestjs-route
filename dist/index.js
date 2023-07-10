@@ -117,15 +117,20 @@ var routeStatusMiddleware = function routeStatusMiddleware() {
   return function (req, res, next) {
     var stime = new Date().getTime();
     onHeaders(res, function () {
-      var _req$route;
       var etime = new Date().getTime();
       var time = etime - stime;
-      var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
+      var routename = getRouteName(req);
       var statusCode = res.statusCode;
       if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time, statusCode);
     });
     next();
   };
+};
+var getRouteName = function getRouteName(req) {
+  var _req$body, _req$route;
+  var graphql = req.baseUrl.startsWith('/graphql');
+  var routename = graphql ? (_req$body = req.body) === null || _req$body === void 0 ? void 0 : _req$body.operationName : (_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path;
+  return routename || 'unknown';
 };
 var Route = function Route(routebase, cdnopts) {
   return function (target) {
@@ -369,8 +374,8 @@ var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   var req = ctx.switchToHttp().getRequest();
   var _req$params = req.params,
     params = _req$params === void 0 ? {} : _req$params,
-    _req$body = req.body,
-    body = _req$body === void 0 ? {} : _req$body,
+    _req$body2 = req.body,
+    body = _req$body2 === void 0 ? {} : _req$body2,
     _req$files = req.files,
     files = _req$files === void 0 ? {} : _req$files,
     _req$query = req.query,

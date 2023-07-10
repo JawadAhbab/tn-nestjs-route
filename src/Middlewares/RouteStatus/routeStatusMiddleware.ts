@@ -1,4 +1,4 @@
-import { RequestHandler } from 'express'
+import { Request, RequestHandler } from 'express'
 import onHeaders from 'on-headers'
 import { routeStatus } from './RouteStatus'
 interface Options {
@@ -13,10 +13,16 @@ export const routeStatusMiddleware = (opts: Options = {}): RequestHandler => {
     onHeaders(res, () => {
       const etime = new Date().getTime()
       const time = etime - stime
-      const routename = req.route?.path || 'unknown'
+      const routename = getRouteName(req)
       const statusCode = res.statusCode
       if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time, statusCode)
     })
     next()
   }
+}
+
+const getRouteName = (req: Request) => {
+  const graphql = req.baseUrl.startsWith('/graphql')
+  const routename = graphql ? req.body?.operationName : req.route?.path
+  return routename || 'unknown'
 }
