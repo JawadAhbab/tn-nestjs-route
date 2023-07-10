@@ -25,7 +25,7 @@ class Status {
   public get summery() {
     return {
       count: this.count,
-      time: [this.mintime, this.ave, this.maxtime],
+      time: `${this.mintime}ms - ${this.ave}ms - ${this.maxtime}ms`,
       cputime: ms(this.cputime),
     }
   }

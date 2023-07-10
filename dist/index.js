@@ -42,7 +42,7 @@ var Status = /*#__PURE__*/function () {
     get: function get() {
       return {
         count: this.count,
-        time: [this.mintime, this.ave, this.maxtime],
+        time: "".concat(this.mintime, "ms - ").concat(this.ave, "ms - ").concat(this.maxtime, "ms"),
         cputime: ms(this.cputime)
       };
     }
