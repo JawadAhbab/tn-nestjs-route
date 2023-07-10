@@ -81,6 +81,9 @@ var RouteStatus = /*#__PURE__*/function () {
           route = _ref2[1];
         return route;
       });
+      rs.sort(function (a, b) {
+        return b.count - a.count;
+      });
       var counts = rs.reduce(function (a, b) {
         return a + b.count;
       }, 0);

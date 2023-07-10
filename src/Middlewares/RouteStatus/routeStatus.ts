@@ -49,6 +49,8 @@ export class RouteStatus {
 
   public createSummery() {
     const rs = Object.entries(this.routes).map(([_, route]) => route)
+    rs.sort((a, b) => b.count - a.count)
+
     const counts = rs.reduce((a, b) => a + b.count, 0)
     const cputimes = rs.reduce((a, b) => a + b.cputime, 0)
     const cputime = ms(cputimes, { verbose: true, secondsDecimalDigits: 0 })
