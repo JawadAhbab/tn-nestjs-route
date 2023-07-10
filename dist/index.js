@@ -6,44 +6,44 @@ var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 var _createClass = require("@babel/runtime/helpers/createClass");
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+var ms = require('pretty-ms');
 var onHeaders = require('on-headers');
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
-var ms = require('ms');
+var ms$1 = require('ms');
 var platformExpress = require('@nestjs/platform-express');
 var Status = /*#__PURE__*/function () {
   function Status(route) {
     _classCallCheck(this, Status);
     _defineProperty(this, "route", void 0);
     _defineProperty(this, "count", 0);
-    _defineProperty(this, "timesum", 0);
-    _defineProperty(this, "mintime", Infinity);
+    _defineProperty(this, "cputime", 0);
     _defineProperty(this, "maxtime", 0);
+    _defineProperty(this, "mintime", Infinity);
     this.route = route;
   }
   _createClass(Status, [{
     key: "saveStatus",
     value: function saveStatus(time) {
       this.count += 1;
-      this.timesum += time;
+      this.cputime += time;
       this.mintime = Math.min(this.mintime, time);
       this.maxtime = Math.max(this.maxtime, time);
     }
   }, {
     key: "ave",
     get: function get() {
-      return Math.round(this.timesum / this.count);
+      return Math.round(this.cputime / this.count);
     }
   }, {
     key: "summery",
     get: function get() {
       return {
         count: this.count,
-        ave: this.ave,
-        min: this.mintime,
-        max: this.maxtime
+        time: [this.mintime, this.ave, this.maxtime],
+        cputime: ms(this.cputime)
       };
     }
   }]);
@@ -65,20 +65,36 @@ var RouteStatus = /*#__PURE__*/function () {
     key: "createSummery",
     value: function createSummery() {
       var sort = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'count';
-      var summery = {};
-      var routes = Object.entries(this.routes).map(function (_ref) {
+      var rs = Object.entries(this.routes).map(function (_ref) {
         var _ref2 = _slicedToArray(_ref, 2),
           _ = _ref2[0],
           route = _ref2[1];
         return route;
       });
-      routes.sort(function (a, b) {
-        return sort === 'count' ? b.count - a.count : b.ave - a.ave;
+      if (sort === 'count') rs.sort(function (a, b) {
+        return b.count - a.count;
+      });else if (sort === 'ave') rs.sort(function (a, b) {
+        return b.ave - a.ave;
+      });else if (sort === 'cpu') rs.sort(function (a, b) {
+        return b.cputime - a.cputime;
       });
-      routes.forEach(function (route) {
-        return summery[route.route] = route.summery;
+      var counts = rs.reduce(function (a, b) {
+        return a + b.count;
+      }, 0);
+      var cputime = rs.reduce(function (a, b) {
+        return a + b.cputime;
+      }, 0);
+      var average = Math.round(cputime / counts);
+      var routes = {};
+      rs.forEach(function (route) {
+        return routes[route.route] = route.summery;
       });
-      return summery;
+      return {
+        counts: counts,
+        average: average,
+        cputime: ms(cputime),
+        routes: routes
+      };
     }
   }]);
   return RouteStatus;
@@ -522,7 +538,7 @@ var routeFieldsSecure = function routeFieldsSecure(query, params, route) {
       expstr = _token$split2[0],
       hash = _token$split2[1];
     var remain = +expstr - new Date().getTime();
-    if (remain <= 0 || remain >= ms(rs.timesafe)) throw new common.UnauthorizedException();
+    if (remain <= 0 || remain >= ms$1(rs.timesafe)) throw new common.UnauthorizedException();
     var hashmatch = sha(paramurl + expstr + secret).toString();
     if (hash !== hashmatch) throw new common.UnauthorizedException();
   } else {

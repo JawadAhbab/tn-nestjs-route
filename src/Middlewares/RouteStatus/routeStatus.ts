@@ -1,34 +1,33 @@
-import { ObjectOf } from 'tn-typescript'
-interface Summery {
-  count: number
-  ave: number
-  min: number
-  max: number
-}
+import ms from 'pretty-ms'
+import { AnyObject, ObjectOf } from 'tn-typescript'
 
 class Status {
   public route: string
   public count = 0
-  private timesum = 0
-  private mintime = Infinity
+  public cputime = 0
   private maxtime = 0
+  private mintime = Infinity
   constructor(route: string) {
     this.route = route
   }
 
   public saveStatus(time: number) {
     this.count += 1
-    this.timesum += time
+    this.cputime += time
     this.mintime = Math.min(this.mintime, time)
     this.maxtime = Math.max(this.maxtime, time)
   }
 
   public get ave() {
-    return Math.round(this.timesum / this.count)
+    return Math.round(this.cputime / this.count)
   }
 
-  public get summery(): Summery {
-    return { count: this.count, ave: this.ave, min: this.mintime, max: this.maxtime }
+  public get summery() {
+    return {
+      count: this.count,
+      time: [this.mintime, this.ave, this.maxtime],
+      cputime: ms(this.cputime),
+    }
   }
 }
 
@@ -41,12 +40,19 @@ export class RouteStatus {
     this.routes[routename].saveStatus(time)
   }
 
-  public createSummery(sort: 'count' | 'time' = 'count') {
-    const summery: ObjectOf<Summery> = {}
-    const routes = Object.entries(this.routes).map(([_, route]) => route)
-    routes.sort((a, b) => (sort === 'count' ? b.count - a.count : b.ave - a.ave))
-    routes.forEach(route => (summery[route.route] = route.summery))
-    return summery
+  public createSummery(sort: 'count' | 'ave' | 'cpu' = 'count') {
+    const rs = Object.entries(this.routes).map(([_, route]) => route)
+    if (sort === 'count') rs.sort((a, b) => b.count - a.count)
+    else if (sort === 'ave') rs.sort((a, b) => b.ave - a.ave)
+    else if (sort === 'cpu') rs.sort((a, b) => b.cputime - a.cputime)
+
+    const counts = rs.reduce((a, b) => a + b.count, 0)
+    const cputime = rs.reduce((a, b) => a + b.cputime, 0)
+    const average = Math.round(cputime / counts)
+    const routes: AnyObject = {}
+    rs.forEach(route => (routes[route.route] = route.summery))
+
+    return { counts, average, cputime: ms(cputime), routes }
   }
 }
 

@@ -1,14 +1,12 @@
-import { ObjectOf } from 'tn-typescript';
-interface Summery {
-    count: number;
-    ave: number;
-    min: number;
-    max: number;
-}
+import { AnyObject } from 'tn-typescript';
 export declare class RouteStatus {
     private routes;
     saveStatus(routename: string, time: number): void;
-    createSummery(sort?: 'count' | 'time'): ObjectOf<Summery>;
+    createSummery(sort?: 'count' | 'ave' | 'cpu'): {
+        counts: number;
+        average: number;
+        cputime: string;
+        routes: AnyObject;
+    };
 }
 export declare const routeStatus: RouteStatus;
-export {};
