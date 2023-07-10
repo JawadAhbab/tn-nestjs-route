@@ -7,7 +7,7 @@ export const routeFieldsQueries = (fields: AnyObject, query: AnyObject, route: R
   route.queries.forEach(({ name, type, optional, selects, validator, getter }) => {
     let value: string | number | boolean | undefined
     const strval = query[name]
-    if (optional && strval === '-') return
+    if (optional && (strval === '-' || strval === null || strval === undefined)) return
     else if (type === 'string') value = strval
     else if (type === 'boolean') {
       if (strval === 'true') value = true

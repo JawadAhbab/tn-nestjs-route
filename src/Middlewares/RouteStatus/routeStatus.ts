@@ -49,7 +49,7 @@ export class RouteStatus {
     const counts = rs.reduce((a, b) => a + b.count, 0)
     const cputimes = rs.reduce((a, b) => a + b.cputime, 0)
     const cputime = ms(cputimes, { verbose: true, secondsDecimalDigits: 0 })
-    const average = Math.round(cputimes / counts)
+    const average = Math.round(cputimes / counts) + 'ms'
     const routes: AnyObject = {}
     rs.forEach(route => (routes[route.route] = route.summery))
 

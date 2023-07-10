@@ -91,7 +91,7 @@ var RouteStatus = /*#__PURE__*/function () {
         verbose: true,
         secondsDecimalDigits: 0
       });
-      var average = Math.round(cputimes / counts);
+      var average = Math.round(cputimes / counts) + 'ms';
       var routes = {};
       rs.forEach(function (route) {
         return routes[route.route] = route.summery;
@@ -523,7 +523,7 @@ var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
       getter = _ref5.getter;
     var value;
     var strval = query[name];
-    if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
+    if (optional && (strval === '-' || strval === null || strval === undefined)) return;else if (type === 'string') value = strval;else if (type === 'boolean') {
       if (strval === 'true') value = true;else if (strval === 'false') value = false;else throw queryerr(name);
     } else {
       value = +strval;

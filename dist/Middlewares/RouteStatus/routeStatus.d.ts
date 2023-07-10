@@ -4,7 +4,7 @@ export declare class RouteStatus {
     saveStatus(routename: string, time: number): void;
     createSummery(sort?: 'count' | 'ave' | 'cpu'): {
         counts: number;
-        average: number;
+        average: string;
         cputime: string;
         routes: AnyObject;
     };
