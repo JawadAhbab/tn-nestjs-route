@@ -79,5 +79,5 @@ export class RoutesController {
 ### RouteStatus
 
 ```ts
-app.use(routeStatus())
+app.use(routeStatusMiddleware())
 ```
