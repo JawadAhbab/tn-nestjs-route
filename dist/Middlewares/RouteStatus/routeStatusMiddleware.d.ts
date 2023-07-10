@@ -1,2 +1,6 @@
 import { RequestHandler } from 'express';
-export declare const routeStatusMiddleware: RequestHandler;
+interface Options {
+    excludes?: string[];
+}
+export declare const routeStatusMiddleware: (opts?: Options) => RequestHandler;
+export {};

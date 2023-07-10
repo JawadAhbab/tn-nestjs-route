@@ -107,16 +107,21 @@ var RouteStatus = /*#__PURE__*/function () {
   return RouteStatus;
 }();
 var routeStatus = new RouteStatus();
-var routeStatusMiddleware = function routeStatusMiddleware(req, res, next) {
-  var stime = new Date().getTime();
-  onHeaders(res, function () {
-    var _req$route;
-    var etime = new Date().getTime();
-    var time = etime - stime;
-    var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
-    routeStatus.saveStatus(routename, time);
-  });
-  next();
+var routeStatusMiddleware = function routeStatusMiddleware() {
+  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var _opts$excludes = opts.excludes,
+    excludes = _opts$excludes === void 0 ? [] : _opts$excludes;
+  return function (req, res, next) {
+    var stime = new Date().getTime();
+    onHeaders(res, function () {
+      var _req$route;
+      var etime = new Date().getTime();
+      var time = etime - stime;
+      var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
+      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time);
+    });
+    next();
+  };
 };
 var Route = function Route(routebase, cdnopts) {
   return function (target) {
