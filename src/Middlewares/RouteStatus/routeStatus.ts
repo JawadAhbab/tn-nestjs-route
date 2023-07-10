@@ -1,14 +1,53 @@
-import { RequestHandler } from 'express'
-import onHeaders from 'on-headers'
-import { statusRoutes } from './StatusRoutes/StatusRoutes'
-
-export const routeStatus: RequestHandler = (req, res, next) => {
-  const stime = new Date().getTime()
-  onHeaders(res, () => {
-    const etime = new Date().getTime()
-    const time = etime - stime
-    const routename = req.route?.path || 'unknown'
-    statusRoutes.saveStatus(routename, time)
-  })
-  next()
+import { ObjectOf } from 'tn-typescript'
+interface Summery {
+  count: number
+  ave: number
+  min: number
+  max: number
 }
+
+class Status {
+  public route: string
+  public count = 0
+  private timesum = 0
+  private mintime = Infinity
+  private maxtime = 0
+  constructor(route: string) {
+    this.route = route
+  }
+
+  public saveStatus(time: number) {
+    this.count += 1
+    this.timesum += time
+    this.mintime = Math.min(this.mintime, time)
+    this.maxtime = Math.max(this.maxtime, time)
+  }
+
+  public get ave() {
+    return Math.round(this.timesum / this.count)
+  }
+
+  public get summery(): Summery {
+    return { count: this.count, ave: this.ave, min: this.mintime, max: this.maxtime }
+  }
+}
+
+export class RouteStatus {
+  private routes: ObjectOf<Status> = {}
+
+  public saveStatus(routename: string, time: number) {
+    const route = this.routes[routename]
+    if (!route) this.routes[routename] = new Status(routename)
+    this.routes[routename].saveStatus(time)
+  }
+
+  public createSummery(sort: 'count' | 'time' = 'count') {
+    const summery: ObjectOf<Summery> = {}
+    const routes = Object.entries(this.routes).map(([_, route]) => route)
+    routes.sort((a, b) => (sort === 'count' ? b.count - a.count : b.ave - a.ave))
+    routes.forEach(route => (summery[route.route] = route.summery))
+    return summery
+  }
+}
+
+export const routeStatus = new RouteStatus()

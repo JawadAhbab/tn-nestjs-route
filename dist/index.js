@@ -13,9 +13,9 @@ var core = require('@nestjs/core');
 var sha = require('crypto-js/sha256');
 var ms = require('ms');
 var platformExpress = require('@nestjs/platform-express');
-var StatusRoute = /*#__PURE__*/function () {
-  function StatusRoute(route) {
-    _classCallCheck(this, StatusRoute);
+var Status = /*#__PURE__*/function () {
+  function Status(route) {
+    _classCallCheck(this, Status);
     _defineProperty(this, "route", void 0);
     _defineProperty(this, "count", 0);
     _defineProperty(this, "timesum", 0);
@@ -23,7 +23,7 @@ var StatusRoute = /*#__PURE__*/function () {
     _defineProperty(this, "maxtime", 0);
     this.route = route;
   }
-  _createClass(StatusRoute, [{
+  _createClass(Status, [{
     key: "saveStatus",
     value: function saveStatus(time) {
       this.count += 1;
@@ -47,18 +47,18 @@ var StatusRoute = /*#__PURE__*/function () {
       };
     }
   }]);
-  return StatusRoute;
+  return Status;
 }();
-var StatusRoutes = /*#__PURE__*/function () {
-  function StatusRoutes() {
-    _classCallCheck(this, StatusRoutes);
+var RouteStatus = /*#__PURE__*/function () {
+  function RouteStatus() {
+    _classCallCheck(this, RouteStatus);
     _defineProperty(this, "routes", {});
   }
-  _createClass(StatusRoutes, [{
+  _createClass(RouteStatus, [{
     key: "saveStatus",
     value: function saveStatus(routename, time) {
       var route = this.routes[routename];
-      if (!route) this.routes[routename] = new StatusRoute(routename);
+      if (!route) this.routes[routename] = new Status(routename);
       this.routes[routename].saveStatus(time);
     }
   }, {
@@ -81,17 +81,17 @@ var StatusRoutes = /*#__PURE__*/function () {
       return summery;
     }
   }]);
-  return StatusRoutes;
+  return RouteStatus;
 }();
-var statusRoutes = new StatusRoutes();
-var routeStatus = function routeStatus(req, res, next) {
+var routeStatus = new RouteStatus();
+var routeStatusMiddleware = function routeStatusMiddleware(req, res, next) {
   var stime = new Date().getTime();
   onHeaders(res, function () {
     var _req$route;
     var etime = new Date().getTime();
     var time = etime - stime;
     var routename = ((_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path) || 'unknown';
-    statusRoutes.saveStatus(routename, time);
+    routeStatus.saveStatus(routename, time);
   });
   next();
 };
@@ -731,8 +731,8 @@ exports.RoutePost = RoutePost;
 exports.RouteQuery = RouteQuery;
 exports.RouteResult = RouteResult;
 exports.RouteSecure = RouteSecure;
-exports.StatusRoutes = StatusRoutes;
+exports.RouteStatus = RouteStatus;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;
 exports.routeStatus = routeStatus;
-exports.statusRoutes = statusRoutes;
+exports.routeStatusMiddleware = routeStatusMiddleware;
