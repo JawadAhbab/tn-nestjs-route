@@ -186,6 +186,7 @@ var RouteBody = function RouteBody(opts, v) {
         optional: optional,
         object: object,
         selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
+        routesecure: (opts === null || opts === void 0 ? void 0 : opts.routesecure) || false,
         getter: getter,
         validator: validator
       };
@@ -310,6 +311,7 @@ var RouteQuery = function RouteQuery(opts, v) {
         type: type,
         optional: optional,
         selects: (opts === null || opts === void 0 ? void 0 : opts.selects) || null,
+        routesecure: (opts === null || opts === void 0 ? void 0 : opts.routesecure) || false,
         validator: validator,
         getter: getter
       };
@@ -732,16 +734,36 @@ var Activate = /*#__PURE__*/function () {
       var _req$params2 = req.params,
         params = _req$params2 === void 0 ? {} : _req$params2,
         _req$query2 = req.query,
-        query = _req$query2 === void 0 ? {} : _req$query2;
+        query = _req$query2 === void 0 ? {} : _req$query2,
+        _req$body3 = req.body,
+        body = _req$body3 === void 0 ? {} : _req$body3;
       var rs = route.routesecure;
       if (!rs) return true;
       var token = rs.query ? query[rs.name] : params[rs.name];
       if (!token) throw new common.UnauthorizedException();
-      var paramurl = route.params.map(function (_ref9) {
-        var name = _ref9.name;
-        return params[name];
-      }).join('/');
       var secret = route.getRouteSecureSecret();
+      var checks = [];
+      route.params.forEach(function (_ref9) {
+        var name = _ref9.name;
+        return checks.push(params[name]);
+      });
+      route.queries.forEach(function (_ref10) {
+        var name = _ref10.name,
+          routesecure = _ref10.routesecure;
+        if (!routesecure) return;
+        var val = query[name];
+        var isnull = val === null || val === undefined;
+        if (!isnull) checks.push(val);
+      });
+      route.bodies.forEach(function (_ref11) {
+        var name = _ref11.name,
+          routesecure = _ref11.routesecure;
+        if (!routesecure) return;
+        var val = query[name];
+        var isnull = val === null || val === undefined;
+        if (!isnull) checks.push(JSON.stringify(val));
+      });
+      var checkstr = checks.join('/');
       if (rs.timesafe) {
         var _token$split = token.split('.'),
           _token$split2 = _slicedToArray(_token$split, 2),
@@ -749,10 +771,10 @@ var Activate = /*#__PURE__*/function () {
           hash = _token$split2[1];
         var remain = +expstr - new Date().getTime();
         if (remain <= 0 || remain >= ms$1(rs.timesafe)) throw new common.UnauthorizedException();
-        var hashmatch = sha(paramurl + expstr + secret).toString();
+        var hashmatch = sha(checkstr + expstr + secret).toString();
         if (hash !== hashmatch) throw new common.UnauthorizedException();
       } else {
-        var _hashmatch = sha(paramurl + secret).toString();
+        var _hashmatch = sha(checkstr + secret).toString();
         if (token !== _hashmatch) throw new common.UnauthorizedException();
       }
       return true;
@@ -784,9 +806,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref10) {
-      var type = _ref10.type,
-        name = _ref10.name;
+    routeinfo.bodies.forEach(function (_ref12) {
+      var type = _ref12.type,
+        name = _ref12.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });

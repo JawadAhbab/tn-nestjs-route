@@ -8,6 +8,7 @@ export interface RouteBodyInfo {
     optional: boolean;
     object: RouteBodyInfo[];
     selects: Selects | null;
+    routesecure: boolean;
     getter: Getter;
     validator: Validator;
 }
@@ -16,6 +17,7 @@ interface Options {
     optional?: boolean;
     selects?: Selects;
     type?: Function | [Function];
+    routesecure?: boolean;
 }
 export declare const RouteBody: <V>(opts?: Options, v?: Validator<V> | undefined) => (target: any, name: string) => void;
 export {};
