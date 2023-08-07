@@ -7,6 +7,7 @@ export interface RouteQueryInfo {
   type: QueryType
   optional: boolean
   selects: Selects | null
+  routesecure: boolean
   getter: Getter
   validator: Validator
 }
@@ -14,6 +15,7 @@ interface Options {
   getter?: Getter
   selects?: Selects
   optional?: boolean
+  routesecure?: boolean
   type?: StringConstructor | NumberConstructor | BooleanConstructor
 }
 
@@ -31,6 +33,7 @@ export const RouteQuery = <V>(opts?: Options, v?: Validator<V>) => {
       type,
       optional,
       selects: opts?.selects || null,
+      routesecure: opts?.routesecure || false,
       validator,
       getter,
     })

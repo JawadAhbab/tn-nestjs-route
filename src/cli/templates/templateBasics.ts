@@ -45,29 +45,46 @@ const createBunnySignature = (info: RouteInfo, variables: AnyObject) => {
   return { token, token_path: path, expires }
 }
 
-const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, paramarr: string[]) => {
+const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, info: RouteInfo) => {
   const { name, timesafe } = rs
   const secret = variables[name]
-  const paramurl = paramarr.join('/')
+  const checks: string[] = []
+  info.params.forEach(({ name }) => {
+    const val = variables[name]
+    const isnull = val === null || val === undefined
+    checks.push(isnull ? '-' : val)
+  })
+  info.queries.forEach(({ name, routesecure }) => {
+    if (!routesecure) return
+    const val = variables[name]
+    const isnull = val === null || val === undefined
+    if (!isnull) checks.push(val)
+  })
+  info.bodies.forEach(({ name, routesecure }) => {
+    if (!routesecure) return
+    const val = variables[name]
+    const isnull = val === null || val === undefined
+    if (!isnull) checks.push(JSON.stringify(val))
+  })
 
-  if (!timesafe) return sha(paramurl + secret).toString()
+  const checkstr = checks.join('/')
+  if (!timesafe) return sha(checkstr + secret).toString()
   const exp = new Date().getTime() + ms(timesafe)
-  return exp + '.' + sha(paramurl + exp + secret).toString()
+  return exp + '.' + sha(checkstr + exp + secret).toString()
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
   const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
   const paramobj: AnyObject = {}
-  const paramarr = info.params.map(({ name }) => {
+  info.params.forEach(({ name }) => {
     const val = variables[name]
     const isnull = val === null || val === undefined
     paramobj[name] = isnull ? '-' : encodeURIComponent(val)
-    return isnull ? '-' : val
   })
 
   if (info.routesecure) {
     const rs = info.routesecure
-    const token = getRouteSecureToken(rs, variables, paramarr)
+    const token = getRouteSecureToken(rs, variables, info)
     if (rs.query) queryarr.push(rs.name + '=' + token)
     else paramobj[rs.name] = token
   }

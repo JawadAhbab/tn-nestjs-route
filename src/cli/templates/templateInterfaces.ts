@@ -44,6 +44,7 @@ interface RouteQueryInfo {
   type: QueryType
   optional: boolean
   selects: Selects | null
+  routesecure: boolean
 }
 
 interface RouteParamInfo {
@@ -63,6 +64,7 @@ interface RouteBodyInfo {
   optional: boolean
   selects: Selects | null
   object: RouteBodyInfo[]
+  routesecure: boolean
 }
 
 interface RouteFileInfo {
