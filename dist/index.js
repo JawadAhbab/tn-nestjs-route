@@ -759,7 +759,7 @@ var Activate = /*#__PURE__*/function () {
         var name = _ref11.name,
           routesecure = _ref11.routesecure;
         if (!routesecure) return;
-        var val = query[name];
+        var val = body[name];
         var isnull = val === null || val === undefined;
         if (!isnull) checks.push(JSON.stringify(val));
       });

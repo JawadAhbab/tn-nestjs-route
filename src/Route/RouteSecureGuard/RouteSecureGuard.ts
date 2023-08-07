@@ -38,7 +38,7 @@ class Activate implements CanActivate {
     })
     route.bodies.forEach(({ name, routesecure }) => {
       if (!routesecure) return
-      const val = query[name]
+      const val = body[name]
       const isnull = val === null || val === undefined
       if (!isnull) checks.push(JSON.stringify(val))
     })
