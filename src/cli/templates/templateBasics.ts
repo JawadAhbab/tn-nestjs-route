@@ -74,12 +74,17 @@ const getRouteSecureToken = (rs: RouteSecure, variables: AnyObject, info: RouteI
 }
 
 const createUrl = (info: RouteInfo, variables: AnyObject) => {
-  const queryarr = info.queries.map(({ name }) => name + '=' + String(variables[name]))
   const paramobj: AnyObject = {}
+  const queryarr: string[] = []
   info.params.forEach(({ name }) => {
     const val = variables[name]
     const isnull = val === null || val === undefined
     paramobj[name] = isnull ? '-' : encodeURIComponent(val)
+  })
+  info.queries.forEach(({ name }) => {
+    const val = variables[name]
+    const isnull = val === null || val === undefined
+    if (!isnull) queryarr.push(name + '=' + String(variables[name]))
   })
 
   if (info.routesecure) {
