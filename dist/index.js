@@ -1,138 +1,18 @@
 'use strict';
 
-var _typeof = require("@babel/runtime/helpers/typeof");
-var _objectSpread = require("@babel/runtime/helpers/objectSpread2");
-var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 var _createClass = require("@babel/runtime/helpers/createClass");
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
-var ms = require('pretty-ms');
-var onHeaders = require('on-headers');
+var _typeof = require("@babel/runtime/helpers/typeof");
+var _objectSpread = require("@babel/runtime/helpers/objectSpread2");
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 var tnValidate = require('tn-validate');
 var common = require('@nestjs/common');
 var core = require('@nestjs/core');
 var platformExpress = require('@nestjs/platform-express');
 var sha = require('crypto-js/sha256');
-var ms$1 = require('ms');
-
-// TODO remove all ms() when visual status page is ready
-var Status = /*#__PURE__*/function () {
-  function Status(route) {
-    _classCallCheck(this, Status);
-    _defineProperty(this, "route", void 0);
-    _defineProperty(this, "count", 0);
-    _defineProperty(this, "cputime", 0);
-    _defineProperty(this, "maxtime", 0);
-    _defineProperty(this, "mintime", Infinity);
-    _defineProperty(this, "statusCodes", {});
-    this.route = route;
-  }
-  _createClass(Status, [{
-    key: "saveStatus",
-    value: function saveStatus(time, statusCode) {
-      this.count += 1;
-      this.cputime += time;
-      this.mintime = Math.min(this.mintime, time);
-      this.maxtime = Math.max(this.maxtime, time);
-      if (!this.statusCodes[statusCode]) this.statusCodes[statusCode] = 0;
-      this.statusCodes[statusCode] += 1;
-    }
-  }, {
-    key: "average",
-    get: function get() {
-      return Math.round(this.cputime / this.count);
-    }
-  }, {
-    key: "summery",
-    get: function get() {
-      return {
-        count: this.count,
-        mintime: this.mintime + 'ms',
-        average: this.average + 'ms',
-        maxtime: this.maxtime + 'ms',
-        cputime: ms(this.cputime, {
-          verbose: true,
-          secondsDecimalDigits: 0
-        }),
-        statusCodes: this.statusCodes
-      };
-    }
-  }]);
-  return Status;
-}();
-var RouteStatus = /*#__PURE__*/function () {
-  function RouteStatus() {
-    _classCallCheck(this, RouteStatus);
-    _defineProperty(this, "routes", {});
-  }
-  _createClass(RouteStatus, [{
-    key: "saveStatus",
-    value: function saveStatus(routename, time, statusCode) {
-      var route = this.routes[routename];
-      if (!route) this.routes[routename] = new Status(routename);
-      this.routes[routename].saveStatus(time, statusCode);
-    }
-  }, {
-    key: "createSummery",
-    value: function createSummery() {
-      var rs = Object.entries(this.routes).map(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-          _ = _ref2[0],
-          route = _ref2[1];
-        return route;
-      });
-      rs.sort(function (a, b) {
-        return b.count - a.count;
-      });
-      var counts = rs.reduce(function (a, b) {
-        return a + b.count;
-      }, 0);
-      var cputimes = rs.reduce(function (a, b) {
-        return a + b.cputime;
-      }, 0);
-      var cputime = ms(cputimes, {
-        verbose: true,
-        secondsDecimalDigits: 0
-      });
-      var average = Math.round(cputimes / counts) + 'ms';
-      var routes = {};
-      rs.forEach(function (route) {
-        return routes[route.route] = route.summery;
-      });
-      return {
-        counts: counts,
-        average: average,
-        cputime: cputime,
-        routes: routes
-      };
-    }
-  }]);
-  return RouteStatus;
-}();
-var routeStatus = new RouteStatus();
-var routeStatusMiddleware = function routeStatusMiddleware() {
-  var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var _opts$excludes = opts.excludes,
-    excludes = _opts$excludes === void 0 ? [] : _opts$excludes;
-  return function (req, res, next) {
-    var stime = new Date().getTime();
-    onHeaders(res, function () {
-      var etime = new Date().getTime();
-      var time = etime - stime;
-      var routename = getRouteName(req);
-      var statusCode = res.statusCode;
-      if (!excludes.includes(routename)) routeStatus.saveStatus(routename, time, statusCode);
-    });
-    next();
-  };
-};
-var getRouteName = function getRouteName(req) {
-  var _req$body, _req$route;
-  var graphql = req.baseUrl.startsWith('/graphql');
-  var routename = graphql ? (_req$body = req.body) === null || _req$body === void 0 ? void 0 : _req$body.operationName : (_req$route = req.route) === null || _req$route === void 0 ? void 0 : _req$route.path;
-  return routename || 'unknown';
-};
+var ms = require('ms');
 var Route = function Route(routebase, cdnopts) {
   return function (target) {
     var routecdnopts = {
@@ -377,8 +257,8 @@ var routeFieldsEssentials = function routeFieldsEssentials(ctx) {
   var req = ctx.switchToHttp().getRequest();
   var _req$params = req.params,
     params = _req$params === void 0 ? {} : _req$params,
-    _req$body2 = req.body,
-    body = _req$body2 === void 0 ? {} : _req$body2,
+    _req$body = req.body,
+    body = _req$body === void 0 ? {} : _req$body,
     _req$files = req.files,
     files = _req$files === void 0 ? {} : _req$files,
     _req$query = req.query,
@@ -475,11 +355,11 @@ var validate = function validate(file, validators) {
   return mimetypes.includes(file.mimetype);
 };
 var routeFieldsFiles = function routeFieldsFiles(fields, files, route) {
-  route.files.forEach(function (_ref3) {
-    var name = _ref3.name,
-      optional = _ref3.optional,
-      type = _ref3.type,
-      validators = _ref3.validators;
+  route.files.forEach(function (_ref) {
+    var name = _ref.name,
+      optional = _ref.optional,
+      type = _ref.type,
+      validators = _ref.validators;
     var multers = files[name];
     if (!optional && !multers) throw fileerr(name);
     if (!multers) return;
@@ -502,13 +382,13 @@ var paramerr = function paramerr(name) {
   return new common.BadRequestException("Invalid parameter: ".concat(name));
 };
 var routeFieldsParams = function routeFieldsParams(fields, params, route) {
-  route.params.forEach(function (_ref4) {
-    var name = _ref4.name,
-      type = _ref4.type,
-      optional = _ref4.optional,
-      selects = _ref4.selects,
-      validator = _ref4.validator,
-      getter = _ref4.getter;
+  route.params.forEach(function (_ref2) {
+    var name = _ref2.name,
+      type = _ref2.type,
+      optional = _ref2.optional,
+      selects = _ref2.selects,
+      validator = _ref2.validator,
+      getter = _ref2.getter;
     var value;
     var strval = params[name];
     if (optional && strval === '-') return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -526,13 +406,13 @@ var queryerr = function queryerr(name) {
   return new common.BadRequestException("Invalid query: ".concat(name));
 };
 var routeFieldsQueries = function routeFieldsQueries(fields, query, route) {
-  route.queries.forEach(function (_ref5) {
-    var name = _ref5.name,
-      type = _ref5.type,
-      optional = _ref5.optional,
-      selects = _ref5.selects,
-      validator = _ref5.validator,
-      getter = _ref5.getter;
+  route.queries.forEach(function (_ref3) {
+    var name = _ref3.name,
+      type = _ref3.type,
+      optional = _ref3.optional,
+      selects = _ref3.selects,
+      validator = _ref3.validator,
+      getter = _ref3.getter;
     var value;
     var strval = query[name];
     if (optional && (strval === '-' || strval === null || strval === undefined)) return;else if (type === 'string') value = strval;else if (type === 'boolean') {
@@ -575,8 +455,8 @@ var routeInfoCdnConfig = function routeInfoCdnConfig(routecls, params) {
       if (param.optional) throw new Error('@RouteParam() bunnysecure:true can not be optional\n');
       tokenparams.push(param);
     });
-    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref6) {
-      var name = _ref6.name;
+    var routearr = [routebase].concat(_toConsumableArray(tokenparams.map(function (_ref4) {
+      var name = _ref4.name;
       return ":".concat(name);
     }))).join('/');
     var tokenroute = "/".concat(routearr, "/").replace(/[\\\/]+/g, '/');
@@ -634,12 +514,12 @@ var routeInfoResults = function routeInfoResults(resultcls) {
   }
   return results;
 };
-var routeInfoRoute = function routeInfoRoute(_ref7) {
-  var routebase = _ref7.routebase,
-    params = _ref7.params,
-    rsi = _ref7.rsi;
-  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref8) {
-    var name = _ref8.name;
+var routeInfoRoute = function routeInfoRoute(_ref5) {
+  var routebase = _ref5.routebase,
+    params = _ref5.params,
+    rsi = _ref5.rsi;
+  var routearr = [routebase].concat(_toConsumableArray(params.map(function (_ref6) {
+    var name = _ref6.name;
     return ":".concat(name);
   })));
   if (rsi && !rsi.query) routearr.push(":".concat(rsi.name));
@@ -735,29 +615,29 @@ var Activate = /*#__PURE__*/function () {
         params = _req$params2 === void 0 ? {} : _req$params2,
         _req$query2 = req.query,
         query = _req$query2 === void 0 ? {} : _req$query2,
-        _req$body3 = req.body,
-        body = _req$body3 === void 0 ? {} : _req$body3;
+        _req$body2 = req.body,
+        body = _req$body2 === void 0 ? {} : _req$body2;
       var rs = route.routesecure;
       if (!rs) return true;
       var token = rs.query ? query[rs.name] : params[rs.name];
       if (!token) throw new common.UnauthorizedException();
       var secret = route.getRouteSecureSecret();
       var checks = [];
-      route.params.forEach(function (_ref9) {
-        var name = _ref9.name;
+      route.params.forEach(function (_ref7) {
+        var name = _ref7.name;
         return checks.push(params[name]);
       });
-      route.queries.forEach(function (_ref10) {
-        var name = _ref10.name,
-          routesecure = _ref10.routesecure;
+      route.queries.forEach(function (_ref8) {
+        var name = _ref8.name,
+          routesecure = _ref8.routesecure;
         if (!routesecure) return;
         var val = query[name];
         var isnull = val === null || val === undefined;
         if (!isnull) checks.push(val);
       });
-      route.bodies.forEach(function (_ref11) {
-        var name = _ref11.name,
-          routesecure = _ref11.routesecure;
+      route.bodies.forEach(function (_ref9) {
+        var name = _ref9.name,
+          routesecure = _ref9.routesecure;
         if (!routesecure) return;
         var val = body[name];
         var isnull = val === null || val === undefined;
@@ -770,7 +650,7 @@ var Activate = /*#__PURE__*/function () {
           expstr = _token$split2[0],
           hash = _token$split2[1];
         var remain = +expstr - new Date().getTime();
-        if (remain <= 0 || remain >= ms$1(rs.timesafe)) throw new common.UnauthorizedException();
+        if (remain <= 0 || remain >= ms(rs.timesafe)) throw new common.UnauthorizedException();
         var hashmatch = sha(checkstr + expstr + secret).toString();
         if (hash !== hashmatch) throw new common.UnauthorizedException();
       } else {
@@ -806,9 +686,9 @@ var createDecor = function createDecor(method, routecls, resultcls) {
     });
     decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
     var acc = ['string', 'number', 'boolean'];
-    routeinfo.bodies.forEach(function (_ref12) {
-      var type = _ref12.type,
-        name = _ref12.name;
+    routeinfo.bodies.forEach(function (_ref10) {
+      var type = _ref10.type,
+        name = _ref10.name;
       if (acc.includes(type)) return;
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
@@ -842,8 +722,5 @@ exports.RoutePost = RoutePost;
 exports.RouteQuery = RouteQuery;
 exports.RouteResult = RouteResult;
 exports.RouteSecure = RouteSecure;
-exports.RouteStatus = RouteStatus;
 exports.createRouteInfo = createRouteInfo;
 exports.routeSchemaCreator = routeSchemaCreator;
-exports.routeStatus = routeStatus;
-exports.routeStatusMiddleware = routeStatusMiddleware;

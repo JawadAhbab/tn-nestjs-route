@@ -1,5 +1,3 @@
-export { RouteStatus, routeStatus } from './Middlewares/RouteStatus/RouteStatus';
-export { routeStatusMiddleware } from './Middlewares/RouteStatus/routeStatusMiddleware';
 export { Route } from './Route/Route';
 export { RouteBody } from './Route/RouteField/RouteBody';
 export { RouteFile } from './Route/RouteField/RouteFile';
