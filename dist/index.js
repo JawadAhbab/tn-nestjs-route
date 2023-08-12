@@ -650,7 +650,7 @@ var Activate = /*#__PURE__*/function () {
           expstr = _token$split2[0],
           hash = _token$split2[1];
         var remain = +expstr - new Date().getTime();
-        if (remain <= 0 || remain >= ms(rs.timesafe)) throw new common.UnauthorizedException();
+        if (remain < 0 || remain > ms(rs.timesafe)) throw new common.UnauthorizedException();
         var hashmatch = sha(checkstr + expstr + secret).toString();
         if (hash !== hashmatch) throw new common.UnauthorizedException();
       } else {

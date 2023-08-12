@@ -47,7 +47,7 @@ class Activate implements CanActivate {
     if (rs.timesafe) {
       const [expstr, hash] = token.split('.')
       const remain = +expstr - new Date().getTime()
-      if (remain <= 0 || remain >= ms(rs.timesafe)) throw new UnauthorizedException()
+      if (remain < 0 || remain > ms(rs.timesafe)) throw new UnauthorizedException()
       const hashmatch = sha(checkstr + expstr + secret).toString()
       if (hash !== hashmatch) throw new UnauthorizedException()
     } else {
