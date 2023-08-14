@@ -1,42 +1,34 @@
-import { CanActivate, ExecutionContext, Injectable, SetMetadata, UnauthorizedException, UseGuards, applyDecorators } from '@nestjs/common'; // prettier-ignore
-import { Reflector } from '@nestjs/core'
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor, UnauthorizedException } from '@nestjs/common'; // prettier-ignore
 import sha from 'crypto-js/sha256'
 import { Request } from 'express'
 import ms from 'ms'
+import { Observable } from 'rxjs'
 import { AnyObject } from 'tn-typescript'
 import { RouteInfo } from '../RouteInfo/RouteInfo'
-const routekey = 'routesecure'
-
-export const RouteSecureGuard = (route: RouteInfo) => {
-  return applyDecorators(SetMetadata(routekey, route), UseGuards(Activate))
-}
 
 @Injectable()
-class Activate implements CanActivate {
-  constructor(private reflector: Reflector) {}
+export class RouteSecureInterceptor implements NestInterceptor {
+  constructor(private readonly route: RouteInfo) {}
 
-  canActivate(context: ExecutionContext) {
-    const handles = [context.getHandler(), context.getClass()]
-    const route = this.reflector.getAllAndOverride<RouteInfo>(routekey, handles)
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const req = context.switchToHttp().getRequest() as Request
     const { params = {} as AnyObject, query = {} as AnyObject, body = {} as AnyObject } = req
-
-    const rs = route.routesecure
-    if (!rs) return true
+    const rs = this.route.routesecure
+    if (!rs) return next.handle()
 
     const token: string = rs.query ? query[rs.name] : params[rs.name]
     if (!token) throw new UnauthorizedException()
 
-    const secret = route.getRouteSecureSecret()
+    const secret = this.route.getRouteSecureSecret()
     const checks: string[] = []
-    route.params.forEach(({ name }) => checks.push(params[name]))
-    route.queries.forEach(({ name, routesecure }) => {
+    this.route.params.forEach(({ name }) => checks.push(params[name]))
+    this.route.queries.forEach(({ name, routesecure }) => {
       if (!routesecure) return
       const val = query[name]
       const isnull = val === null || val === undefined
       if (!isnull) checks.push(val)
     })
-    route.bodies.forEach(({ name, routesecure }) => {
+    this.route.bodies.forEach(({ name, routesecure }) => {
       if (!routesecure) return
       const val = body[name]
       const isnull = val === null || val === undefined
@@ -55,6 +47,6 @@ class Activate implements CanActivate {
       if (token !== hashmatch) throw new UnauthorizedException()
     }
 
-    return true
+    return next.handle()
   }
 }

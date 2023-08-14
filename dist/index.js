@@ -595,21 +595,15 @@ function __decorate(decorators, target, key, desc) {
 function __metadata(metadataKey, metadataValue) {
   if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(metadataKey, metadataValue);
 }
-var routekey = 'routesecure';
-var RouteSecureGuard = function RouteSecureGuard(route) {
-  return common.applyDecorators(common.SetMetadata(routekey, route), common.UseGuards(Activate));
-};
-var Activate = /*#__PURE__*/function () {
-  function Activate(reflector) {
-    _classCallCheck(this, Activate);
-    _defineProperty(this, "reflector", void 0);
-    this.reflector = reflector;
+var RouteSecureInterceptor = /*#__PURE__*/function () {
+  function RouteSecureInterceptor(route) {
+    _classCallCheck(this, RouteSecureInterceptor);
+    _defineProperty(this, "route", void 0);
+    this.route = route;
   }
-  _createClass(Activate, [{
-    key: "canActivate",
-    value: function canActivate(context) {
-      var handles = [context.getHandler(), context.getClass()];
-      var route = this.reflector.getAllAndOverride(routekey, handles);
+  _createClass(RouteSecureInterceptor, [{
+    key: "intercept",
+    value: function intercept(context, next) {
       var req = context.switchToHttp().getRequest();
       var _req$params2 = req.params,
         params = _req$params2 === void 0 ? {} : _req$params2,
@@ -617,17 +611,17 @@ var Activate = /*#__PURE__*/function () {
         query = _req$query2 === void 0 ? {} : _req$query2,
         _req$body2 = req.body,
         body = _req$body2 === void 0 ? {} : _req$body2;
-      var rs = route.routesecure;
-      if (!rs) return true;
+      var rs = this.route.routesecure;
+      if (!rs) return next.handle();
       var token = rs.query ? query[rs.name] : params[rs.name];
       if (!token) throw new common.UnauthorizedException();
-      var secret = route.getRouteSecureSecret();
+      var secret = this.route.getRouteSecureSecret();
       var checks = [];
-      route.params.forEach(function (_ref7) {
+      this.route.params.forEach(function (_ref7) {
         var name = _ref7.name;
         return checks.push(params[name]);
       });
-      route.queries.forEach(function (_ref8) {
+      this.route.queries.forEach(function (_ref8) {
         var name = _ref8.name,
           routesecure = _ref8.routesecure;
         if (!routesecure) return;
@@ -635,7 +629,7 @@ var Activate = /*#__PURE__*/function () {
         var isnull = val === null || val === undefined;
         if (!isnull) checks.push(val);
       });
-      route.bodies.forEach(function (_ref9) {
+      this.route.bodies.forEach(function (_ref9) {
         var name = _ref9.name,
           routesecure = _ref9.routesecure;
         if (!routesecure) return;
@@ -657,12 +651,12 @@ var Activate = /*#__PURE__*/function () {
         var _hashmatch = sha(checkstr + secret).toString();
         if (token !== _hashmatch) throw new common.UnauthorizedException();
       }
-      return true;
+      return next.handle();
     }
   }]);
-  return Activate;
+  return RouteSecureInterceptor;
 }();
-Activate = __decorate([common.Injectable(), __metadata("design:paramtypes", [core.Reflector])], Activate);
+RouteSecureInterceptor = __decorate([common.Injectable(), __metadata("design:paramtypes", [Object])], RouteSecureInterceptor);
 var RouteGet = function RouteGet(routecls, resultcls) {
   return createDecor('GET', routecls, resultcls);
 }; // prettier-ignore
@@ -672,6 +666,7 @@ var RoutePost = function RoutePost(routecls, resultcls) {
 var createDecor = function createDecor(method, routecls, resultcls) {
   var routeinfo = createRouteInfo(method, routecls, resultcls);
   var decors = [];
+  var interceptors = [];
   decors.push(function (target) {
     if (!tnValidate.isArray(target.$routes)) target.$routes = [];
     target.$routes.push(routeinfo);
@@ -684,7 +679,7 @@ var createDecor = function createDecor(method, routecls, resultcls) {
         name: file.name
       };
     });
-    decors.push(common.UseInterceptors(platformExpress.FileFieldsInterceptor(multer)));
+    interceptors.push(platformExpress.FileFieldsInterceptor(multer));
     var acc = ['string', 'number', 'boolean'];
     routeinfo.bodies.forEach(function (_ref10) {
       var type = _ref10.type,
@@ -693,12 +688,13 @@ var createDecor = function createDecor(method, routecls, resultcls) {
       throw new Error("You are using @RouteFile() so @RouteBody(".concat(name, ") must be typeof ").concat(acc, "\n"));
     });
   }
-  if (routeinfo.routesecure) decors.push(RouteSecureGuard(routeinfo));
+  if (routeinfo.routesecure) interceptors.push(new RouteSecureInterceptor(routeinfo));
   if (routeinfo.cdnconfig.bunnysecure) {
     var rs = routeinfo.routesecure;
     if (rs && rs.query) throw new Error("@RouteSecure() query:true not allowed when bunnysecure\n");
     if (routeinfo.queries.length) throw new Error("@RouteQuery() not allowed when bunnysecure");
   }
+  if (interceptors.length) decors.push(common.UseInterceptors.apply(common, interceptors));
   return common.applyDecorators.apply(common, decors);
 };
 var routeSchemaCreator = function routeSchemaCreator(controllers) {

@@ -1,10 +1,10 @@
-import { Get, Post, UseInterceptors, applyDecorators } from '@nestjs/common'
+import { Get, NestInterceptor, Post, UseInterceptors, applyDecorators } from '@nestjs/common'
 import { FileFieldsInterceptor } from '@nestjs/platform-express'
 import { MulterField } from '@nestjs/platform-express/multer/interfaces/multer-options.interface'
 import { isArray } from 'tn-validate'
 import { RouteBodyType } from './RouteField/RouteBody'
 import { RouteMethod, createRouteInfo } from './RouteInfo/RouteInfo'
-import { RouteSecureGuard } from './RouteSecureGuard/RouteSecureGuard'
+import { RouteSecureInterceptor } from './RouteSecureInterceptor/RouteSecureInterceptor'
 type ResultClass = Function | BufferConstructor | StringConstructor
 
 export const RouteGet = (routecls: Function, resultcls?: ResultClass) => createDecor('GET', routecls, resultcls) // prettier-ignore
@@ -13,6 +13,7 @@ export const RoutePost = (routecls: Function, resultcls?: ResultClass) => create
 const createDecor = (method: RouteMethod, routecls: Function, resultcls?: ResultClass) => {
   const routeinfo = createRouteInfo(method, routecls, resultcls)
   const decors: MethodDecorator[] = []
+  const interceptors: (NestInterceptor | Function)[] = []
 
   decors.push((target: any) => {
     if (!isArray(target.$routes)) target.$routes = []
@@ -24,7 +25,7 @@ const createDecor = (method: RouteMethod, routecls: Function, resultcls?: Result
 
   if (routeinfo.files.length) {
     const multer: MulterField[] = routeinfo.files.map(file => ({ name: file.name }))
-    decors.push(UseInterceptors(FileFieldsInterceptor(multer)))
+    interceptors.push(FileFieldsInterceptor(multer))
     const acc: RouteBodyType[] = ['string', 'number', 'boolean']
     routeinfo.bodies.forEach(({ type, name }) => {
       if (acc.includes(type)) return
@@ -32,13 +33,13 @@ const createDecor = (method: RouteMethod, routecls: Function, resultcls?: Result
     })
   }
 
-  if (routeinfo.routesecure) decors.push(RouteSecureGuard(routeinfo))
-
+  if (routeinfo.routesecure) interceptors.push(new RouteSecureInterceptor(routeinfo))
   if (routeinfo.cdnconfig.bunnysecure) {
     const rs = routeinfo.routesecure
     if (rs && rs.query) throw new Error(`@RouteSecure() query:true not allowed when bunnysecure\n`)
     if (routeinfo.queries.length) throw new Error(`@RouteQuery() not allowed when bunnysecure`)
   }
 
+  if (interceptors.length) decors.push(UseInterceptors(...interceptors))
   return applyDecorators(...decors)
 }
